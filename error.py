@@ -10,7 +10,7 @@ import datetime
 class Error:
 
 	def __init__(self):
-		self.path = '../logs.txt'
+		self.path = './logs.txt'
 		self.time = datetime.datetime.now()
 
 	def log(self, message):
