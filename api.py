@@ -6,6 +6,14 @@ import requests
 import json
 import time
 import tqdm
+import numpy as np
+import pandas as pd
+import os
+
+from datetime import date
+from lxml import html
+from xml.etree import ElementTree
+from collections import defaultdict
 
 from error import *
 
@@ -98,7 +106,7 @@ class RequestEedomus:
 		# Make sure all the devices will be extracted from the Eedomus server
 		self.get_peripheriques()
 
-		msg = Messager()
+		msg = Messenger()
 
 		for gdr in ['T', 'H', 'L', 'M'] :
 			for num in tqdm.tqdm([str(e) for e in range(1,12)] + ['C']) :
@@ -129,10 +137,150 @@ class RequestEedomus:
 		val = self.get_values('Temprature [ambiante]')
 		for v in val : raw.write(str(v) + ';')
 		msg.log('Acquisition completed for T_E')
-		raw.close()
+		raw.close()	
+
+class RequestQAI:
+
+	def __init__(self):
+		self.url1 = 'http://www.lcsqa.org/indices-qualite-air/liste'
+		self.url2 = 'http://www.airparif.asso.fr/indices/resultats-jour-citeair#jour/'
+
+	def extract(self, url, req):
+
+		# Scrapping du site de LCSQA
+		if url == self.url1 :
+
+			dic = {}
+			raw = []
+			pwd = req['html']['body']['div']['div'][3]['div'][1]['div']['div'][1]['div'][2]['table']['tbody']['tr']
+
+			for i in range(len(pwd)) :
+				val = pwd[i]['td']
+				loc = val[2]['#text']
+				dic[loc] = {}
+
+				try :
+					dic[loc]['Ind'] = float(val[3]['#text'])
+				except :
+					dic[loc]['Ind'] = np.NaN
+				try :
+					dic[loc]['O3'] = float(val[4]['#text'])
+				except :
+					dic[loc]['O3'] = np.NaN
+				try :
+					dic[loc]['NO2'] = float(val[5]['#text'])
+				except :
+					dic[loc]['NO2'] = np.NaN
+				try :
+					dic[loc]['PM10'] = float(val[6]['#text'])
+				except :
+					dic[loc]['PM10'] = np.NaN
+				try :
+					dic[loc]['SO2'] = float(val[7]['#text'])
+				except :
+					dic[loc]['SO2'] = np.NaN
+
+				# Indice global, Dioxyde d'azote, Particules fines, Dioxyde de soufre, Ozo
+				for fea in ['Ind', 'NO2', 'PM10', 'SO2', 'O3'] :
+					raw.append(dic['PARIS'][fea])
+
+			return raw
+
+		# Scrapping de AirParif
+		elif url == self.url2 :
+
+			pwd = req['html']['body']['div']['div']['div'][2]['div'][0]['div'][0]['div'][4]['table']['tr']
+			raw = []
+
+			# Etat de la liste :
+			# loc = 2 correspond a Paris
+			# loc = 6 correspond au departement Hauts-de-Seine
+			for loc in [2, 6] : 
+
+				if loc == 2 :
+					new = ['Paris']
+				else : 
+					new = ['Haut-de-Seine']
+
+				# Indice moyen, Dioxyde d'azote, Ozone, Particules Fines
+				for ind in [1, 3, 4, 5] :
+					try :
+						new.append(float(pwd[loc]['td'][ind]['#text'])/10.0)
+					except :
+						new.append(np.NaN)
+
+				raw.append(np.asarray(new))
+
+			return raw
+
+	def get_data(self):
+
+		err = Error()
+		msg = Messenger()
+
+		def etreeToDict(t):
+
+			d = {t.tag: {} if t.attrib else None}
+			children = list(t)
+
+			if children:
+				dd = defaultdict(list)
+				for dc in map(etreeToDict, children):
+					for k, v in dc.iteritems():
+						dd[k].append(v)
+				d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+
+			if t.attrib:
+				d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+
+			if t.text:
+				text = t.text.strip()
+				if children or t.attrib:
+					if text:
+						d[t.tag]['#text'] = text
+					else:
+						d[t.tag] = text
+
+			return d
+
+		for ind, url in enumerate([self.url1, self.url2]) :
+
+			ext = requests.get(url).content
+			
+			try :
+				req = html.fromstring(ext)
+				dic = etreeToDict(req)
+				raw = self.extract(url, dic)
+				msg.log('{}'.format(url))
+			except :
+				if ind == 0 : 
+					raw = np.asarray([np.empty(5)])
+					raw[:] = np.NaN
+					err.log('Could not extract intel from LCSQA')
+				elif ind == 1 :
+					raw = np.empty((2,5))
+					raw[:] = np.NaN
+					err.log('Could not extract intel from PARIF')
+
+			if ind == 0 : 
+				pwd = '../AirQuality/QAI_LCSQA'
+				lab = ['IndMoyen', 'NO2', 'PM10', 'SO2', 'O3']
+				idx = [date.today()] 
+			elif ind == 1 : 
+				pwd = '../AirQuality/QAI_PARIF'
+				lab = ['Location', 'IndMoyen', 'NO2', 'O3', 'PM10']
+				idx = [date.today(), date.today()]
+
+			if not os.path.exists(pwd) :
+				pd.DataFrame(data=raw, index=idx, columns=lab).to_pickle(pwd)
+			else :
+				dtf = pd.read_pickle(pwd)
+				new = pd.DataFrame(data=raw, index=idx, columns=lab)
+				dtf = pd.concat([dtf, new])
+				dtf.to_pickle(pwd)
+
+			msg.log('Database {} successfully updated'.format(ind))
 
 if __name__ == '__main__':
-	req = RequestEedomus()
+	req = RequestQAI()
 	req.get_data()
-
-	
