@@ -17,7 +17,7 @@ class Error:
 		file.write('[{}] : {}'.format(str(self.time), message+'\n'))
 		file.close()
 
-class Messager:
+class Messenger:
 
 	def __init__(self):
 		self.path = './messages.txt'
