@@ -12,7 +12,6 @@ import os
 
 from datetime import date
 from lxml import html
-from xml.etree import ElementTree
 from collections import defaultdict
 
 from error import *
@@ -336,7 +335,3 @@ class RequestWeather:
 			dtf.to_pickle(pwd)
 
 		msg.log('{} successfully updated'.format(pwd))
-
-if __name__ == '__main__':
-	req = RequestWeather(datetime.date.today())
-	req.get_data()
