@@ -180,9 +180,9 @@ class RequestQAI:
 				except :
 					dic[loc]['SO2'] = np.NaN
 
-				# Indice global, Dioxyde d'azote, Particules fines, Dioxyde de soufre, Ozo
-				for fea in ['Ind', 'NO2', 'PM10', 'SO2', 'O3'] :
-					raw.append(dic['PARIS'][fea])
+			# Indice global, Dioxyde d'azote, Particules fines, Dioxyde de soufre, Ozo
+			for fea in ['Ind', 'NO2', 'PM10', 'SO2', 'O3'] :
+				raw.append(dic['PARIS'][fea])
 
 			return raw
 
@@ -238,24 +238,22 @@ class RequestQAI:
 				if children or t.attrib:
 					if text:
 						d[t.tag]['#text'] = text
-					else:
-						d[t.tag] = text
+				else:
+					d[t.tag] = text
 
 			return d
 
 		for ind, url in enumerate([self.url1, self.url2]) :
 
-			ext = requests.get(url).content
-			req = html.fromstring(ext)
-			dic = etreeToDict(req)
-			print(dic)
-			
 			try :
+				req = html.fromstring(requests.get(url).content)
+				dic = etreeToDict(req)
 				raw = self.extract(url, dic)
-				msg.log('{}'.format(url))
+				if ind == 0 : msg.log('LCSQA website has been scrapped')
+				elif ind == 1 : msg.log('AIRPARIF website has been scrapped')
 			except :
 				if ind == 0 : 
-					raw = np.asarray([np.empty(5)])
+					raw = [np.empty(5)]
 					raw[:] = np.NaN
 					err.log('Could not extract intel from LCSQA')
 				elif ind == 1 :
@@ -266,11 +264,13 @@ class RequestQAI:
 			if ind == 0 : 
 				pwd = '../AirQuality/QAI_LCSQA'
 				lab = ['IndMoyen', 'NO2', 'PM10', 'SO2', 'O3']
-				idx = [date.today()] 
+				idx = np.asarray([date.today()])
+				raw = np.asarray([raw])
 			elif ind == 1 : 
 				pwd = '../AirQuality/QAI_PARIF'
 				lab = ['Location', 'IndMoyen', 'NO2', 'O3', 'PM10']
-				idx = [date.today(), date.today()]
+				idx = np.asarray([date.today(), date.today()])
+				raw = np.asarray(raw)
 
 			if not os.path.exists(pwd) :
 				pd.DataFrame(data=raw, index=idx, columns=lab).to_pickle(pwd)
