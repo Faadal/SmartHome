@@ -15,7 +15,10 @@ schedule.every().day.at('08:00').do(api_eed.get_data())
 schedule.every().day.at('20:00').do(api_eed.get_data())
 
 api_qai = RequestQAI()
-schedule.every().day.at('23:00').do(api_qai.get_date())
+schedule.every().day.at('23:00').do(api_qai.get_data())
+
+api_wea = RequestWeather(datetime.date.today())
+schedule.every().day.at('23:15').do(api_wea.get_data())
 
 # Launch
 
