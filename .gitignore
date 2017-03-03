@@ -1,5 +1,5 @@
 # Ignore following files
 
-./__pycache__
+./__pycache__/
 
 ./logs.txt
