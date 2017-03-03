@@ -257,7 +257,7 @@ class RequestQAI:
 					raw[:] = np.NaN
 					err.log('Could not extract intel from LCSQA')
 				elif ind == 1 :
-					raw = np.empty((2,5))
+					raw = np.empty((2, 5))
 					raw[:] = np.NaN
 					err.log('Could not extract intel from PARIF')
 
@@ -282,6 +282,61 @@ class RequestQAI:
 
 			msg.log('{} successfully updated'.format(pwd))
 
+class RequestWeather:
+
+	def __init__(self, date):
+		self.usr = '702b72db6a4d6dfb74390fa36065a5c5'
+		self.dte = date
+		# Paris geographical position
+		self.lat = '48.8534'
+		self.lon = '2.3488'
+		self.day = str(self.dte) + 'T00:00:00'
+		self.url = 'https://api.darksky.net/forecast/{}/{},{},{}'.format(self.usr, self.lat, self.lon, self.day)
+
+	def get_data(self):
+
+		err = Error()
+		msg = Messenger()
+
+		lab = ['summary', 'aTwea', 'cover', 'dewPoint', 'Hwea', 'ozone', 'rainFall', 'rainProb', 'Pwea', 'Twea', 'windExposure', 'windSpeed']
+		new, idx = [], []
+
+		try :
+			req = requests.get(self.url).json()
+			raw = req['hourly']['data']
+			
+			for ind in raw :
+				tem = []
+				idx.append(datetime.datetime.fromtimestamp(ind['time']))
+				try :
+					tem.append(ind['summary'])
+				except :
+					tem.append('Unknown')
+				for fea in ['apparentTemperature', 'cloudCover', 'dewPoint', 'humidity', 'ozone', 'precipIntensity', 'precipProbability', 'pressure', 'temperature', 'windBearing', 'windSpeed'] :
+					try :
+						tem.append(float(ind[fea]))
+					except :
+						tem.append(np.NaN)
+				new.append(np.asarray(tem))
+
+			msg.log('Successfully extracted the weather intel for {}'.format(self.dte))
+		except :
+			new = np.zeros((24, 12))
+			new[:] = np.NaN
+			err.log('Could not gather the weather intel for {}'.format(self.dte))
+
+		pwd = '../Weather/WEA'
+
+		if not os.path.exists(pwd) :
+			pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab).to_pickle(pwd)
+		else :
+			dtf = pd.read_pickle(pwd)
+			new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab)
+			dtf = pd.concat([dtf, new])
+			dtf.to_pickle(pwd)
+
+		msg.log('{} successfully updated'.format(pwd))
+
 if __name__ == '__main__':
-	req = RequestQAI()
+	req = RequestWeather(datetime.date.today())
 	req.get_data()
