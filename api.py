@@ -226,12 +226,12 @@ class RequestQAI:
 			if children:
 				dd = defaultdict(list)
 				for dc in map(etreeToDict, children):
-					for k, v in dc.iteritems():
+					for k, v in dc.items():
 						dd[k].append(v)
-				d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+				d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.items()}}
 
 			if t.attrib:
-				d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+				d[t.tag].update(('@' + k, v) for k, v in t.attrib.items())
 
 			if t.text:
 				text = t.text.strip()
@@ -246,10 +246,11 @@ class RequestQAI:
 		for ind, url in enumerate([self.url1, self.url2]) :
 
 			ext = requests.get(url).content
+			req = html.fromstring(ext)
+			dic = etreeToDict(req)
+			print(dic)
 			
 			try :
-				req = html.fromstring(ext)
-				dic = etreeToDict(req)
 				raw = self.extract(url, dic)
 				msg.log('{}'.format(url))
 			except :
@@ -279,7 +280,7 @@ class RequestQAI:
 				dtf = pd.concat([dtf, new])
 				dtf.to_pickle(pwd)
 
-			msg.log('Database {} successfully updated'.format(ind))
+			msg.log('{} successfully updated'.format(pwd))
 
 if __name__ == '__main__':
 	req = RequestQAI()
