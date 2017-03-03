@@ -136,7 +136,9 @@ class RequestEedomus:
 		val = self.get_values('Temprature [ambiante]')
 		for v in val : raw.write(str(v) + ';')
 		msg.log('Acquisition completed for T_E')
-		raw.close()	
+		raw.close()
+
+# Job aiming at gathering intel about air quality out of two websites	
 
 class RequestQAI:
 
@@ -280,6 +282,8 @@ class RequestQAI:
 				dtf.to_pickle(pwd)
 
 			msg.log('{} successfully updated'.format(pwd))
+
+# Job aiming at gathering intel about weather
 
 class RequestWeather:
 
