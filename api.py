@@ -354,7 +354,3 @@ class RequestWeather:
 			dtf.to_pickle(pwd)
 
 		msg.log('{} successfully updated'.format(pwd))
-
-if __name__ == '__main__':
-	api = RequestEedomus()
-	api.get_data()
