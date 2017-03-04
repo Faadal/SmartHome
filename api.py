@@ -32,25 +32,28 @@ class RequestEedomus:
 		self.pwd = '44xNeKX0OsZt0yYR'
 		self.aut = requests.get('https://api.eedomus.com/get?api_user={}&api_secret={}&action=auth.test'.format(self.usr, self.pwd))
 		
+		err = Error()
+		msg = Messenger()
+
+		res = self.aut.json()
+
 		try :
 			# Assert if the connection is effective
-			res = json.loads(self.aut.content)
 			if res['success'] == 1 :
-				pass
+				msg.log('Authentification on Eedomus server succeeded')
 			else :
-				err = Error()
 				err.log('Authentification on Eedomus server failed')
+			self.acc = True
 		except :
-			err = Error()
 			err.log('Could not load data from Eedomus server')
+			self.acc = False
 
 		self.req = requests.get('https://api.eedomus.com/get?api_user={}&api_secret={}&action=periph.list'.format(self.usr, self.pwd))
 
 		try :
 			# Check the request
-			self.req = json.loads(self.req.text)['body']
+			self.req = self.req.json()['body']
 		except :
-			err = Error()
 			err.log('Eedomus request has no body')
 
 	# Create the list of every sensor connected to the Eedomus interface
@@ -61,6 +64,8 @@ class RequestEedomus:
 
 		for i in tqdm.tqdm(range(len(self.req))):
 			new = self.req[i]['name'].encode('ascii', 'ignore')
+			# Solves the problem with bytes type keys
+			new = new.decode('utf-8')
 			per[new] = int(self.req[i]['periph_id'])
 
 		self.per = per
@@ -78,8 +83,9 @@ class RequestEedomus:
 
 		raw = {}
 		val = []
+
 		try :
-			raw = json.loads(req_per(periph).content)['body']['history']
+			raw = req_per(periph).json()['body']['history']
 		except :
 			err = Error()
 			err.log('Could not load intel for periph {}'.format(periph))
@@ -102,41 +108,47 @@ class RequestEedomus:
 
 	def get_data(self):
 
-		# Make sure all the devices will be extracted from the Eedomus server
-		self.get_peripheriques()
-
+		err = Error()
 		msg = Messenger()
 
-		for gdr in ['T', 'H', 'L', 'M'] :
-			for num in tqdm.tqdm([str(e) for e in range(1,12)] + ['C']) :
+		if not self.acc :
+			err.log('Aborted the request')
 
-				pwd = '../Data/Data_{}_{}.txt'.format(gdr, num)
-				raw = open(pwd, 'a')
+		else :
 
-				if num == 'C' :
-					if gdr == 'T' : val = self.get_values('Temperature Couloir Salle')
-					elif gdr == 'H' : val = self.get_values('Humidite Couloir Salle')
-					elif gdr == 'L' : val = self.get_values('Luminosite Couloir Salle')
-					elif gdr == 'M' : val = self.get_values('Mouvement Couloir Salle')
-				else :
-					if int(num) < 10 : num = '0' + num
-					if gdr == 'T' : val = self.get_values('Temperature {} Salle'.format(num))
-					elif gdr == 'H' : val = self.get_values('Humidite {} Salle'.format(num))
-					elif gdr == 'L' : val = self.get_values('Luminosite {} Salle'.format(num))
-					elif gdr == 'M' : val = self.get_values('Mouvement {} Salle'.format(num))
+			# Make sure all the devices will be extracted from the Eedomus server
+			self.get_peripheriques()
 
-				for v in val : raw.write(str(v) + ';')
-				msg.log('Acquisition completed for {}_{}'.format(gdr, num))
+			for gdr in ['T', 'H', 'L', 'M'] :
+				for num in tqdm.tqdm([str(e) for e in range(1,12)] + ['C']) :
 
-				raw.close()
-				# Avoid too many requests for the server
-				time.sleep(1)
+					pwd = '../Data/Data_{}_{}.txt'.format(gdr, num)
+					raw = open(pwd, 'a')
 
-		raw = open('../Data/Data_T_E.txt', 'a')
-		val = self.get_values('Temprature [ambiante]')
-		for v in val : raw.write(str(v) + ';')
-		msg.log('Acquisition completed for T_E')
-		raw.close()
+					if num == 'C' :
+						if gdr == 'T' : val = self.get_values('Temperature Couloir Salle')
+						elif gdr == 'H' : val = self.get_values('Humidite Couloir Salle')
+						elif gdr == 'L' : val = self.get_values('Luminosite Couloir Salle')
+						elif gdr == 'M' : val = self.get_values('Mouvement Couloir Salle')
+					else :
+						if int(num) < 10 : num = '0' + num
+						if gdr == 'T' : val = self.get_values('Temperature {} Salle'.format(num))
+						elif gdr == 'H' : val = self.get_values('Humidite {} Salle'.format(num))
+						elif gdr == 'L' : val = self.get_values('Luminosite {} Salle'.format(num))
+						elif gdr == 'M' : val = self.get_values('Mouvement {} Salle'.format(num))
+
+					for v in val : raw.write(str(v) + ';')
+					msg.log('Acquisition completed for {}_{}'.format(gdr, num))
+
+					raw.close()
+					# Avoid too many requests for the server
+					time.sleep(1)
+
+			raw = open('../Data/Data_T_E.txt', 'a')
+			val = self.get_values('Temprature [ambiante]')
+			for v in val : raw.write(str(v) + ';')
+			msg.log('Acquisition completed for T_E')
+			raw.close()
 
 # Job aiming at gathering intel about air quality out of two websites	
 
