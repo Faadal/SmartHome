@@ -7,6 +7,7 @@ import datetime
 import time
 
 from api import *
+from processing import *
 
 # Get rid of the usual crontab
 
@@ -20,6 +21,8 @@ schedule.every().day.at('23:00').do(api_qai.get_data())
 api_wea = RequestWeather(datetime.date.today())
 schedule.every().day.at('23:15').do(api_wea.get_data())
 
+sampler = Sample(datetime.date.today())
+schedule.every().day.at('23:30').do(sampler.get_samples())
 # Launch
 
 while True :
