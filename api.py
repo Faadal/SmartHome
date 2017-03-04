@@ -137,8 +137,11 @@ class RequestEedomus:
 						elif gdr == 'L' : val = self.get_values('Luminosite {} Salle'.format(num))
 						elif gdr == 'M' : val = self.get_values('Mouvement {} Salle'.format(num))
 
-					for v in val : raw.write(str(v) + ';')
-					msg.log('Acquisition completed for {}_{}'.format(gdr, num))
+					if len(val) == 0 :
+						msg.log('Sensor {}_{} does not respond'.format(gdr, num))
+					else :
+						for v in val : raw.write(str(v) + ';')
+						msg.log('Acquisition completed for {}_{}'.format(gdr, num))
 
 					raw.close()
 					# Avoid too many requests for the server
@@ -351,3 +354,7 @@ class RequestWeather:
 			dtf.to_pickle(pwd)
 
 		msg.log('{} successfully updated'.format(pwd))
+
+if __name__ == '__main__':
+	api = RequestEedomus()
+	api.get_data()
