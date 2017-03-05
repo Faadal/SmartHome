@@ -15,11 +15,10 @@ class Sampler:
 
 	def __init__(self, date=datetime.date.today()):
 		self.dte = date
+		self.err = Error()
+		self.msg = Messenger()
 
 	def get_sample(self, sensor):
-
-		err = Error()
-		msg = Messenger()
 
 		out, tem, sca = [], [], []
 
@@ -53,12 +52,12 @@ class Sampler:
 				return new
 
 			tem = remove_doublon(tem)
-			msg.log('Data correctly extracted for sensor {}'.format(sensor))
+			self.msg.log('Data correctly extracted for sensor {}'.format(sensor))
 		except :
-			err.log('Could not read data for sensor {}'.format(sensor))
+			self.err.log('Could not read data for sensor {}'.format(sensor))
 
 		if len(tem) == 0 :
-			err.log('No data for sensor {}'.format(sensor))
+			self.err.log('No data for sensor {}'.format(sensor))
 
 		else :
 			# Save the amount of acquisitions realized by the considered sensor
@@ -67,9 +66,9 @@ class Sampler:
 				pwd.write('Le {} :\n'.format(self.dte.strftime('%d/%m/%Y')))
 				pwd.write('{} acquisitions\n'.format(len(tem)))
 				pwd.close()
-				msg.log('Acquisitions have been saved for sensor {}'.format(sensor))
+				self.msg.log('Acquisitions have been saved for sensor {}'.format(sensor))
 			except :
-				err.log('Impossible to update the acquisition process')
+				self.err.log('Impossible to update the acquisition process')
 
 			def time_slot(sensor):
 
@@ -88,7 +87,7 @@ class Sampler:
 					if int(10*ele) >= 0 and int(10*ele) < len(time_slot(sensor)) :
 						tab[int(10*ele)] = val[ind]
 			except :
-				err.log('Failure for algorithmic extraction and sorting for sensor {}'.format(sensor))
+				self.err.log('Failure for algorithmic extraction and sorting for sensor {}'.format(sensor))
 
 			def remplissage(values) :
 
@@ -140,9 +139,9 @@ class Sampler:
 				pwd.write(str(time_slot(sensor))+'\n')
 				pwd.write(str(ful)+'\n')
 				pwd.close()
-				msg.log('Sample created for sensor {}'.format(sensor))
+				self.msg.log('Sample created for sensor {}'.format(sensor))
 			except :
-				err.log('Could not create the sample for sensor {}'.format(sensor))
+				self.err.log('Could not create the sample for sensor {}'.format(sensor))
 
 	def get_samples(self):
 
