@@ -17,11 +17,6 @@ from collections import defaultdict
 from error import *
 
 # Define class request for data gathering
-# usr -> api id
-# pwd -> api key
-# aut -> request for authentification
-# req -> request for periphericals
-# per -> dictionnary of periphericals
 
 class RequestEedomus:
 
@@ -157,8 +152,15 @@ class RequestEedomus:
 
 class RequestQAI:
 
-	def __init__(self):
-		self.url1 = 'http://www.lcsqa.org/indices-qualite-air/liste'
+	def __init__(self, date=datetime.date.today()):
+
+		self.date = date
+
+		if self.date == datetime.date.today() :
+			self.url1 = 'http://www.lcsqa.org/indices-qualite-air/liste'
+		else:
+			self.url1 = 'http://www.lcsqa.org/indices-qualite-air/liste?date_indice={}'.format(date.strftime('%Y-%m-%d'))	
+	
 		self.url2 = 'http://www.airparif.asso.fr/indices/resultats-jour-citeair#jour/'
 
 	def extract(self, url, req):
@@ -259,7 +261,12 @@ class RequestQAI:
 
 			return d
 
-		for ind, url in enumerate([self.url1, self.url2]) :
+		if self.date == datetime.date.today() :
+			ite = [self.url1, self.url2]
+		else :
+			ite = [self.url1]
+
+		for ind, url in enumerate(ite) :
 
 			try :
 				req = html.fromstring(requests.get(url).content)
@@ -302,7 +309,7 @@ class RequestQAI:
 
 class RequestWeather:
 
-	def __init__(self, date):
+	def __init__(self, date=datetime.date.today()):
 		self.usr = '702b72db6a4d6dfb74390fa36065a5c5'
 		self.dte = date
 		# Paris geographical position
