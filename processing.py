@@ -13,7 +13,7 @@ from error import *
 
 class Sampler:
 
-	def __init__(self, date):
+	def __init__(self, date=datetime.date.today()):
 		self.dte = date
 
 	def get_sample(self, sensor):
