@@ -26,21 +26,20 @@ class RequestEedomus:
 		self.usr = 'ZeRV4W'
 		self.pwd = '44xNeKX0OsZt0yYR'
 		self.aut = requests.get('https://api.eedomus.com/get?api_user={}&api_secret={}&action=auth.test'.format(self.usr, self.pwd))
-		
-		err = Error()
-		msg = Messenger()
+		self.err = Error()
+		self.msg = Messenger()
 
 		res = self.aut.json()
 
 		try :
 			# Assert if the connection is effective
 			if res['success'] == 1 :
-				msg.log('Authentification on Eedomus server succeeded')
+				self.msg.log('Authentification on Eedomus server succeeded')
 			else :
-				err.log('Authentification on Eedomus server failed')
+				self.err.log('Authentification on Eedomus server failed')
 			self.acc = True
 		except :
-			err.log('Could not load data from Eedomus server')
+			self.err.log('Could not load data from Eedomus server')
 			self.acc = False
 
 		self.req = requests.get('https://api.eedomus.com/get?api_user={}&api_secret={}&action=periph.list'.format(self.usr, self.pwd))
@@ -49,7 +48,7 @@ class RequestEedomus:
 			# Check the request
 			self.req = self.req.json()['body']
 		except :
-			err.log('Eedomus request has no body')
+			self.err.log('Eedomus request has no body')
 
 	# Create the list of every sensor connected to the Eedomus interface
 
@@ -82,8 +81,7 @@ class RequestEedomus:
 		try :
 			raw = req_per(periph).json()['body']['history']
 		except :
-			err = Error()
-			err.log('Could not load intel for periph {}'.format(periph))
+			self.err.log('Could not load intel for periph {}'.format(periph))
 
 		if periph[0] == 'M' :
 			for i in range(len(raw)) :
@@ -103,11 +101,8 @@ class RequestEedomus:
 
 	def get_data(self):
 
-		err = Error()
-		msg = Messenger()
-
 		if not self.acc :
-			err.log('Aborted the request')
+			self.err.log('Aborted the request')
 
 		else :
 
@@ -133,10 +128,10 @@ class RequestEedomus:
 						elif gdr == 'M' : val = self.get_values('Mouvement {} Salle'.format(num))
 
 					if len(val) == 0 :
-						msg.log('Sensor {}_{} does not respond'.format(gdr, num))
+						self.msg.log('Sensor {}_{} does not respond'.format(gdr, num))
 					else :
 						for v in val : raw.write(str(v) + ';')
-						msg.log('Acquisition completed for {}_{}'.format(gdr, num))
+						self.msg.log('Acquisition completed for {}_{}'.format(gdr, num))
 
 					raw.close()
 					# Avoid too many requests for the server
@@ -145,7 +140,7 @@ class RequestEedomus:
 			raw = open('../Data/Data_T_E.txt', 'a')
 			val = self.get_values('Temprature [ambiante]')
 			for v in val : raw.write(str(v) + ';')
-			msg.log('Acquisition completed for T_E')
+			self.msg.log('Acquisition completed for T_E')
 			raw.close()
 
 # Job aiming at gathering intel about air quality out of two websites	
@@ -153,6 +148,9 @@ class RequestEedomus:
 class RequestQAI:
 
 	def __init__(self, date=datetime.date.today()):
+
+		self.err = Error()
+		self.msg = Messenger()
 
 		self.date = date
 
@@ -233,9 +231,6 @@ class RequestQAI:
 
 	def get_data(self):
 
-		err = Error()
-		msg = Messenger()
-
 		def etreeToDict(t):
 
 			d = {t.tag: {} if t.attrib else None}
@@ -272,17 +267,17 @@ class RequestQAI:
 				req = html.fromstring(requests.get(url).content)
 				dic = etreeToDict(req)
 				raw = self.extract(url, dic)
-				if ind == 0 : msg.log('LCSQA website has been scrapped')
-				elif ind == 1 : msg.log('AIRPARIF website has been scrapped')
+				if ind == 0 : self.msg.log('LCSQA website has been scrapped')
+				elif ind == 1 : self.msg.log('AIRPARIF website has been scrapped')
 			except :
 				if ind == 0 : 
 					raw = [np.empty(5)]
 					raw[:] = np.NaN
-					err.log('Could not extract intel from LCSQA')
+					self.err.log('Could not extract intel from LCSQA')
 				elif ind == 1 :
 					raw = np.empty((2, 5))
 					raw[:] = np.NaN
-					err.log('Could not extract intel from PARIF')
+					self.err.log('Could not extract intel from PARIF')
 
 			if ind == 0 : 
 				pwd = '../AirQuality/QAI_LCSQA'
@@ -303,13 +298,15 @@ class RequestQAI:
 				dtf = pd.concat([dtf, new])
 				dtf.to_pickle(pwd)
 
-			msg.log('{} successfully updated'.format(pwd))
+			self.msg.log('{} successfully updated'.format(pwd))
 
 # Job aiming at gathering intel about weather
 
 class RequestWeather:
 
 	def __init__(self, date=datetime.date.today()):
+		self.err = Error()
+		self.msg = Messenger()
 		self.usr = '702b72db6a4d6dfb74390fa36065a5c5'
 		self.dte = date
 		# Paris geographical position
@@ -319,9 +316,6 @@ class RequestWeather:
 		self.url = 'https://api.darksky.net/forecast/{}/{},{},{}'.format(self.usr, self.lat, self.lon, self.day)
 
 	def get_data(self):
-
-		err = Error()
-		msg = Messenger()
 
 		lab = ['summary', 'aTwea', 'cover', 'dewPoint', 'Hwea', 'ozone', 'rainFall', 'rainProb', 'Pwea', 'Twea', 'windExposure', 'windSpeed']
 		new, idx = [], []
@@ -344,11 +338,11 @@ class RequestWeather:
 						tem.append(np.NaN)
 				new.append(np.asarray(tem))
 
-			msg.log('Successfully extracted the weather intel for {}'.format(self.dte))
+			self.msg.log('Successfully extracted the weather intel for {}'.format(self.dte))
 		except :
 			new = np.zeros((24, 12))
 			new[:] = np.NaN
-			err.log('Could not gather the weather intel for {}'.format(self.dte))
+			self.err.log('Could not gather the weather intel for {}'.format(self.dte))
 
 		pwd = '../Weather/WEA'
 
@@ -360,4 +354,4 @@ class RequestWeather:
 			dtf = pd.concat([dtf, new])
 			dtf.to_pickle(pwd)
 
-		msg.log('{} successfully updated'.format(pwd))
+		self.msg.log('{} successfully updated'.format(pwd))
