@@ -26,6 +26,7 @@ class RequestEedomus:
 		self.usr = 'ZeRV4W'
 		self.pwd = '44xNeKX0OsZt0yYR'
 		self.aut = requests.get('https://api.eedomus.com/get?api_user={}&api_secret={}&action=auth.test'.format(self.usr, self.pwd))
+		self.sen = Logs()
 		self.err = Error()
 		self.msg = Messenger()
 
@@ -128,10 +129,10 @@ class RequestEedomus:
 						elif gdr == 'M' : val = self.get_values('Mouvement {} Salle'.format(num))
 
 					if len(val) == 0 :
-						self.msg.log('Sensor {}_{} does not respond'.format(gdr, num))
+						self.sen.log('Sensor {}_{} does not respond'.format(gdr, num))
 					else :
 						for v in val : raw.write(str(v) + ';')
-						self.msg.log('Acquisition completed for {}_{}'.format(gdr, num))
+						self.sen.log('Acquisition completed for {}_{}'.format(gdr, num))
 
 					raw.close()
 					# Avoid too many requests for the server

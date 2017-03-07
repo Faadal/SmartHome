@@ -27,3 +27,14 @@ class Messenger:
 		file = open(self.path, 'a')
 		file.write('[{}] : {}'.format(str(self.time), message+'\n'))
 		file.close()
+
+class Logs:
+
+	def __init__(self):
+		self.path = './sensors.txt'
+		selt.time = datetime.datetime.now()
+
+	def log(self, message):
+		file = open(self.path, 'a')
+		file.write('[{}] : {}'.format(str(self.time), message+'\n'))
+		file.close()
