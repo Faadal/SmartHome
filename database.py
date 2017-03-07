@@ -12,6 +12,7 @@ from dateutil import parser
 from dateutil.rrule import rrule, DAILY
 
 from api import *
+from tools import *
 
 # Job aiming at reading known inputs to extract sought data
 
@@ -38,14 +39,6 @@ class Parser:
 			return [], []
 
 	def parse_measures(self, genre, room):
-
-		def match_room(room):
-
-			# Has to evolve with the new configuration
-			if room == 'N227' :
-				return ['3', '6', '7', '8']
-			else :
-				return []
 			
 		stl, mea = [], []
 
@@ -172,12 +165,6 @@ class Database:
 
 	def available_dates(self, srt, end):
 
-		def remove_doublon(raw):
-			new = []
-			for val in raw :
-				if val not in new : new.append(val)
-			return new
-
 		val = []
 		for fil in os.listdir('../Sample') :
 			dte = parser.parse(fil[4:14])
@@ -201,14 +188,25 @@ class Database:
 			idx, raw = [], []
 
 			for dte in ava :
-				new = []
 				par = Parser(dte)
-				stl, m_T = self.par.parse_measures('T', self.ort)
-				stl, m_H = self.par.parse_measures('H', self.ort)
-				stl, m_L = self.par.parse_measures('L', self.ort)
-				stl, hyp = self.par.parse_hyperplanning(stl, self.ort)
-				stl, wea = self.par.parse_weather()
-				stl, qai = self.par.parse_qai()
+				tim, new = time_slot('T'), []
+
+				# Deals with non homogeneous samples
+				stl, m_T = par.parse_measures('T', self.ort)
+				if stl != len(tim) :
+					m_T = remplissage(time_process('T', stl, m_T))
+				
+				stl, m_H = par.parse_measures('H', self.ort)
+				if stl != len(tim) :
+					m_H = remplissage(time_process('H', stl, m_H))
+				
+				stl, m_L = par.parse_measures('L', self.ort)
+				if stl != len(tim) :
+					m_L = remplissage(time_process('T', stl, m_L))
+
+				stl, hyp = par.parse_hyperplanning(stl, self.ort)
+				stl, wea = par.parse_weather()
+				stl, qai = par.parse_qai()
 
 
 	def update(self):

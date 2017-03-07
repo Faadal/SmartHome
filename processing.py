@@ -65,13 +65,6 @@ class Sampler:
 			except :
 				self.err.log('Impossible to update the acquisition process')
 
-			def time_slot(sensor):
-
-				if sensor[:1] in ['T', 'H', 'L'] :
-					return [float(int(10*(0.0+k*0.1)))/10.0 for k in range(241)]
-				else :
-					return [float(int(10*(0.0+k*0.01)))/10.0 for k in range(2401)]
-
 			tab = np.zeros(len(time_slot(sensor)))
 
 			# End of processing for the gathered time serie
