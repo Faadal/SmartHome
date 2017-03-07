@@ -2,6 +2,8 @@
 
 # Imports
 
+import numpy as np
+
 # Aims at removing value occurencies
 
 def remove_doublon(raw):
@@ -28,9 +30,9 @@ def match_room(room):
 def time_slot(sensor):
 
 	if sensor[:1] in ['T', 'H', 'L'] :
-		return [float(int(10*(0.0+k*0.1)))/10.0 for k in range(241)]
+		return [float(int(10*(0.0+k*0.1)))/10.0 for k in range(240)]
 	else :
-		return [float(int(10*(0.0+k*0.01)))/10.0 for k in range(2401)]
+		return [float(int(10*(0.0+k*0.01)))/10.0 for k in range(2400)]
 
 # Preprocessing to feed the filling holes algorithm
 
