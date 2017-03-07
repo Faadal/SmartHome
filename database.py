@@ -3,6 +3,7 @@
 # Imports
 
 import os
+import copy
 import datetime
 import numpy as np
 import pandas as pd
@@ -189,24 +190,40 @@ class Database:
 
 			for dte in ava :
 				par = Parser(dte)
-				tim, new = time_slot('T'), []
+				mis = np.empty((1, len(time_slot('T')+1)))
+				mis[:] = np.NaN
+				tim, new, idx = time_slot('T'), [], []
 
 				# Deals with non homogeneous samples
 				stl, m_T = par.parse_measures('T', self.ort)
 				if stl != len(tim) :
 					m_T = remplissage(time_process('T', stl, m_T))
+				elif len(m_T) == 0 :
+					m_T = copy.copy(mis)
 				
 				stl, m_H = par.parse_measures('H', self.ort)
 				if stl != len(tim) :
 					m_H = remplissage(time_process('H', stl, m_H))
+				elif len(m_H) == 0 :
+					m_H = copy.copy(mis)
 				
 				stl, m_L = par.parse_measures('L', self.ort)
 				if stl != len(tim) :
 					m_L = remplissage(time_process('T', stl, m_L))
+				elif len(m_L) == 0 :
+					m_L = copy.copy(mis)
 
-				stl, hyp = par.parse_hyperplanning(stl, self.ort)
+				stl, hyp = par.parse_hyperplanning(tim, self.ort)
+
 				stl, wea = par.parse_weather()
+				stl = [float(ele.hour) + float(ele.minute)/60.0 for ele in stl]
+				if stl != len(tim) :
+					wea = remplissage(time_process('T', stl, wea))
+
 				stl, qai = par.parse_qai()
 
+				for ind, val in enumerate(time) :
+					raw = []
+					raw.append()
 
 	def update(self):
