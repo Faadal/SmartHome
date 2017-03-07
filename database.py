@@ -8,6 +8,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import datetime
+import tqdm
 
 from dateutil import parser
 from dateutil.rrule import rrule, DAILY
@@ -25,12 +26,12 @@ class Parser:
 
 	def parse_measures_sensor(self, sensor):
 
-		pwd = '../Sample/Sam_{}_{}_{}.txt'.format(self.dte.date().strftime('%d-%m-%Y'), sensor[:1], sensor[1:])
+		pwd = '../Sample/Sam_{}_{}_{}.txt'.format(self.dte.strftime('%d-%m-%Y'), sensor[:1], sensor[1:])
 
 		try :
 			raw = open(pwd, 'r')
-			stl = [float(e) for e in data.readline()[1:-2].split(',')]
-			val = [float(e) for e in data.readline()[1:-2].split(',')]
+			stl = [float(e) for e in raw.readline()[1:-2].split(',')]
+			val = [float(e) for e in raw.readline()[1:-2].split(',')]
 			raw.close()
 
 			return stl, val
@@ -44,8 +45,8 @@ class Parser:
 		stl, mea = [], []
 
 		for sen in match_room(room):
-			stl, val = parse_measures_sensor(genre + sen)
-			if stl, val == [], []
+			stl, val = self.parse_measures_sensor(genre + sen)
+			if len(stl) == 0 and len(val) == 0 :
 				pass
 			else :
 				stl = stl
@@ -53,7 +54,7 @@ class Parser:
 
 		# Define the average measures to constitute the database
 		if len(mea) == 0 :
-			self.err.log('No data gathered for room {}'.format(room))
+			self.err.log('No data gathered for room {} for the feature {}'.format(room, genre))
 			new = []
 		else :
 			new = np.zeros(len(mea[0]))
@@ -80,6 +81,7 @@ class Parser:
 
 		try :
 			raw = pd.read_pickle('../AirQuality/QAI_LCSQA')
+			print(raw)
 			stl = raw[self.dte:self.dte].index
 			val = raw[self.dte:self.dte].values
 
@@ -91,7 +93,7 @@ class Parser:
 
 	def parse_hyperplanning(self, tem, room):
 
-		pwd = '../Presences/{}.txt', 'r'.format(room)
+		pwd = '../Presences/{}.txt'.format(room)
 
 		def read(raw) :
 
@@ -100,28 +102,34 @@ class Parser:
 			for line in raw.readlines() :
 				item = line.split(',') 
 
-				if item[0] not in dbs.keys() :
+				if len(item) <= 3 :
+					pass
+				elif item[0] not in dbs.keys() :
 					dbs[item[0]] = []
+				else :
+					tdic = {}
+					tdic['Begin'] = item[1]
+					tdic['End'] = item[2]
+					tdic['Type'] = item[3]
 
-				tdic = {}
-				tdic['Begin'] = item[1]
-				tdic['End'] = item[2]
-				tdic['Type'] = item[3]
+					if len(item) == 5 :
+						tdic['Students'] = item[4]
 
-				if len(item) == 5 :
-					tdic['Students'] = item[4]
-
-				dbs[item[0]].append(tdic)
+					dbs[item[0]].append(tdic)
 		
 			return(dbs)
 
 		try :
+
 			raw = open(pwd, 'r')
 			dbs = read(raw)
 			raw.close()
+			
+			if self.dte.strftime('%d/%m/%Y') not in list(dbs.keys()) :
+				val = np.zeros(len(tem))
+				val[:] = False
+				return tem, val
 
-			if self.dte.strftime('%d/%m/%Y') not in dbs.keys() :
-				return tem, np.zeros(len(tem))
 			else :
 				hyp = []
 				for tme in dbs[self.dte.strftime('%d/%m/%Y')] :
@@ -129,7 +137,7 @@ class Parser:
 					t1 = l1[0] + l1[1]/60.0
 					l2 = [float(e) for e in tme['End'].split(':')]            
 					t2 = l2[0] + l2[1]/60.0 
-					hyp += range(t1, t2, 0.1)
+					hyp += [t1 + k*0.1 for k in range(int(10*(t2-t1)))]
 
 				val = []
 				for ele in tem :
@@ -168,30 +176,31 @@ class Database:
 
 		val = []
 		for fil in os.listdir('../Sample') :
-			dte = parser.parse(fil[4:14])
-			if dte in rrule(DAILY, dtstart=srt, until=end) :
-				val.append(dte)
+			val.append(parser.parse(fil[4:14], yearfirst=True, dayfirst=True).date())
 
 		return remove_doublon(val)
 
 	def build_from_scratch(self):
 
-		srt = datetime.date(2015,1,1)
+		srt = datetime.date(2016,1,1)
 		end = datetime.date.today() - datetime.timedelta(days=1)
+		pwd = '../Databases/DB_{}'.format(self.ort)
 
-		if os.path.exists('../Databases/DB_{}'.format(self.ort)) :
+		if os.path.exists(pwd) :
 			self.err.log('Will not build the entire database from scratch')
 		else :
 			self.msg.log('Initialize database creation for room {}'.format(self.ort))
 			
-			ava = self.availables_dates(srt, end)
+			ava = self.available_dates(srt, end)
 
 			idx, raw = [], []
 
-			for dte in ava :
+			mis = np.zeros(len(time_slot('T')))
+			mis[:] = np.NaN
+
+			for dte in tqdm.tqdm(ava) :
 				par = Parser(dte)
-				mis = np.empty((1, len(time_slot('T')+1)))
-				mis[:] = np.NaN
+				
 				tim, new, idx = time_slot('T'), [], []
 
 				# Deals with non homogeneous samples
@@ -213,17 +222,96 @@ class Database:
 				elif len(m_L) == 0 :
 					m_L = copy.copy(mis)
 
+				stl, T_C = par.parse_measures_sensor('TC')
+				if stl != len(tim) :
+					T_C = remplissage(time_process('T', stl, T_C))
+				elif len(T_C) == 0 :
+					T_C = copy.copy(mis)
+
+				stl, H_C = par.parse_measures_sensor('HC')
+				if stl != len(tim) :
+					H_C = remplissage(time_process('T', stl, H_C))
+				elif len(H_C) == 0 :
+					H_C = copy.copy(mis)
+
+				stl, L_C = par.parse_measures_sensor('LC')
+				if stl != len(tim) :
+					L_C = remplissage(time_process('T', stl, L_C))
+				elif len(L_C) == 0 :
+					L_C = copy.copy(mis)
+
+				stl, T_E = par.parse_measures_sensor('TE')
+				if stl != len(tim) :
+					T_E = remplissage(time_process('T', stl, T_E))
+				elif len(T_E) == 0 :
+					T_E = copy.copy(mis)
+
 				stl, hyp = par.parse_hyperplanning(tim, self.ort)
+				if len(hyp) == 0 :
+					hyp = copy.copy(mis)
 
 				stl, wea = par.parse_weather()
 				stl = [float(ele.hour) + float(ele.minute)/60.0 for ele in stl]
 				if stl != len(tim) :
-					wea = remplissage(time_process('T', stl, wea))
+					wea = [remplissage(time_process('T', stl, ele)) for ele in wea]
+				elif len(wea) == 0 :
+					wea = copy.copy(mis)
 
 				stl, qai = par.parse_qai()
+				if len(qai) == 0 :
+					qai = np.zeros(len(qai))
+					qai[:] = np.NaN
 
-				for ind, val in enumerate(time) :
+				for ind, ele in enumerate(tim) :
 					raw = []
-					raw.append()
+					# Add the corresponding index
+					idx.append(datetime.datetime(dte.year, dte.month, dte.day, int(ele), int((ele-int(ele))*60)))
+					# Minute
+					raw.append(int((ele-int(ele))*60))
+					# Hour
+					raw.append(int(ele))
+					# Day
+					raw.append(dte.day)
+					# Weekday
+					raw.append(dte.weekday())
+					# Week number
+					raw.append(dte.isocalendar()[1])
+					# Month
+					raw.append(dte.month)
+					# Year
+					raw.append(dte.year)
+					# Temperature measure
+					raw.append(m_T[ind])
+					# Humidity measure
+					raw.append(m_H[ind])
+					# Luminosity measure
+					raw.append(m_L[ind])
+					# Hall temperature
+					raw.append(T_C[ind])
+					# Hall humidity
+					raw.append(H_C[ind])
+					# Hall luminosity
+					raw.append(L_C[ind])
+					# External temperature
+					raw.append(T_E[ind])
+					# Busy
+					raw.append(hyp[ind])
+					# Weather
+					raw += list(wea)
+					# Air quality
+					raw += list(qai)
 
-	def update(self):
+				new.append(np.asarray(raw))
+
+			try :
+				pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=np.asarray(lab)).to_pickle(pwd)
+				self.msg.log('Database successfully build for room {}'.format(self.ort))
+			except :
+				self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
+
+#	def update(self):
+
+if __name__ == '__main__':
+	par = Parser(datetime.date.today() - datetime.timedelta(days=5))
+	s, v = par.parse_hyperplanning(time_slot('T'), 'N227')
+	print(v)
