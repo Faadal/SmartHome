@@ -6,6 +6,7 @@ import os
 import datetime
 import numpy as np
 import pandas as pd
+import datetime
 
 from dateutil import parser
 from dateutil.rrule import rrule, DAILY
@@ -19,22 +20,6 @@ class Parser:
 	def __init__(self, date):
 		self.dte = date
 		self.err = Error()
-
-	def parse_dates(self, srt, end):
-
-		def remove_doublon(raw):
-			new = []
-			for val in raw :
-				if val not in new : new.append(val)
-			return new
-
-		val = []
-		for fil in os.listdir('../Sample') :
-			dte = parser.parse(fil[4:14])
-			if dte in rrule(DAILY, dtstart=srt, until=end) :
-				val.append(dte)
-
-		return remove_doublon(val)
 
 	def parse_measures_sensor(self, sensor):
 
@@ -52,7 +37,7 @@ class Parser:
 
 			return [], []
 
-	def parse_measure(self, genre, room):
+	def parse_measures(self, genre, room):
 
 		def match_room(room):
 
@@ -75,13 +60,14 @@ class Parser:
 		# Define the average measures to constitute the database
 		if len(mea) == 0 :
 			self.err.log('No data gathered for room {}'.format(room))
+			new = []
 		else :
-			val = np.zeros(len(mea[0]))
+			new = np.zeros(len(mea[0]))
 			for ele in mea :
 				for ind in range(len(ele)) :
-					val[ind] += ele[ind]/float(len(mea))
+					new[ind] += ele[ind]/float(len(mea))
 
-		return stl, val
+		return stl, new
 
 	def parse_weather(self):
 
@@ -94,6 +80,8 @@ class Parser:
 		except :
 			self.err.log('Could not parse the weather database')
 
+			return [], []
+
 	def parse_qai(self):
 
 		try :
@@ -104,6 +92,8 @@ class Parser:
 			return stl, val
 		except :
 			self.err.log('Could not parse the air quality database')
+
+			return [], []
 
 	def parse_hyperplanning(self, tem, room):
 
@@ -152,17 +142,73 @@ class Parser:
 					if ele in hyp : val.append(True)
 					else : val.append(False)
 
+				return tem, val
+
 		except :
 			self.err.log('Could not parse the hyperplanning for room {}'.format(room))
+
+			return [], []
 
 # Job aiming at creating and updating the desired databases
 
 class Database:
 
 	def __init__(self, room):
+		
+		# Define database structure
 		self.ort = room
 
+		self.lab_cla = ['minute', 'hour', 'day', 'weekDay', 'weekNumber', 'month', 'year']
+		self.lab_mea = ['T', 'H', 'L', 'Tcap', 'Hcap', 'Lcap', 'Text']
+		self.lab_hyp = ['busy']
+		self.lab_wea = ['summary', 'aTwea', 'cover', 'dewPoint', 'Hwea', 'ozone', 'rainFall', 'rainProb', 'Pwea', 'Twea', 'windExposure', 'windSpeed']
+		self.lab_qai = ['IndMoyen', 'NO2', 'PM10', 'SO2', 'O3']
+
+		self.lab = self.lab_cla + self.lab_hyp + self.lab_mea + self.lab_wea + self.lab_qai
+		
+		# Classical user-friendly objects
+		self.err = Error()
+		self.msg = Messenger()
+
+	def available_dates(self, srt, end):
+
+		def remove_doublon(raw):
+			new = []
+			for val in raw :
+				if val not in new : new.append(val)
+			return new
+
+		val = []
+		for fil in os.listdir('../Sample') :
+			dte = parser.parse(fil[4:14])
+			if dte in rrule(DAILY, dtstart=srt, until=end) :
+				val.append(dte)
+
+		return remove_doublon(val)
+
 	def build_from_scratch(self):
+
+		srt = datetime.date(2015,1,1)
+		end = datetime.date.today() - datetime.timedelta(days=1)
+
+		if os.path.exists('../Databases/DB_{}'.format(self.ort)) :
+			self.err.log('Will not build the entire database from scratch')
+		else :
+			self.msg.log('Initialize database creation for room {}'.format(self.ort))
+			
+			ava = self.availables_dates(srt, end)
+
+			idx, raw = [], []
+
+			for dte in ava :
+				new = []
+				par = Parser(dte)
+				stl, m_T = self.par.parse_measures('T', self.ort)
+				stl, m_H = self.par.parse_measures('H', self.ort)
+				stl, m_L = self.par.parse_measures('L', self.ort)
+				stl, hyp = self.par.parse_hyperplanning(stl, self.ort)
+				stl, wea = self.par.parse_weather()
+				stl, qai = self.par.parse_qai()
 
 
 	def update(self):
