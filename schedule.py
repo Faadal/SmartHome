@@ -17,11 +17,11 @@ schedule.every().day.at('08:00').do(RequestEedomus().get_data())
 
 schedule.every().day.at('20:00').do(RequestEedomus().get_data())
 
-schedule.every().day.at('23:00').do(RequestQAI().get_data())
+schedule.every().day.at('23:15').do(RequestQAI().get_data())
 
-schedule.every().day.at('23:15').do(RequestWeather().get_data())
+schedule.every().day.at('23:30').do(RequestWeather().get_data())
 
-schedule.every().day.at('23:30').do(Sampler().get_samples())
+schedule.every().day.at('23:45').do(Sampler().get_samples())
 
 # Schedule to correct databases once a week
 
