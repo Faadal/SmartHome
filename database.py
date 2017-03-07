@@ -7,6 +7,7 @@ import datetime
 import numpy as np
 import pandas as pd
 
+from dateutil import parser
 from dateutil.rrule import rrule, DAILY
 
 from api import *
@@ -15,9 +16,25 @@ from api import *
 
 class Parser:
 
-	def __init__(self, sensor, date):
+	def __init__(self, date):
 		self.dte = date
 		self.err = Error()
+
+	def parse_dates(self, srt, end):
+
+		def remove_doublon(raw):
+			new = []
+			for val in raw :
+				if val not in new : new.append(val)
+			return new
+
+		val = []
+		for fil in os.listdir('../Sample') :
+			dte = parser.parse(fil[4:14])
+			if dte in rrule(DAILY, dtstart=srt, until=end) :
+				val.append(dte)
+
+		return remove_doublon(val)
 
 	def parse_measures_sensor(self, sensor):
 
@@ -134,7 +151,7 @@ class Parser:
 				for ele in tem :
 					if ele in hyp : val.append(True)
 					else : val.append(False)
-					
+
 		except :
 			self.err.log('Could not parse the hyperplanning for room {}'.format(room))
 
@@ -145,6 +162,7 @@ class Database:
 	def __init__(self, room):
 		self.ort = room
 
-	def build(self):
+	def build_from_scratch(self):
+
 
 	def update(self):
