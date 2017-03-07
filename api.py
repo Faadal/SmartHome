@@ -110,7 +110,7 @@ class RequestEedomus:
 			self.get_peripheriques()
 
 			for gdr in ['T', 'H', 'L', 'M'] :
-				for num in tqdm.tqdm([str(e) for e in range(1,12)] + ['C']) :
+				for num in tqdm.tqdm([str(e) for e in range(1,13)] + ['C']) :
 
 					pwd = '../Data/Data_{}_{}.txt'.format(gdr, num)
 					raw = open(pwd, 'a')
