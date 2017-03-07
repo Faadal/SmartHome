@@ -15,7 +15,7 @@ from api import *
 
 class Parser:
 
-	def __init__(self, date, sensor):
+	def __init__(self, sensor, date):
 		self.dte = date
 		self.err = Error()
 
@@ -39,12 +39,11 @@ class Parser:
 
 		def match_room(room):
 
-			sen = []
 			# Has to evolve with the new configuration
 			if room == 'N227' :
-				sen = ['3', '6', '7', '8']
-
-			return sen
+				return ['3', '6', '7', '8']
+			else :
+				return []
 			
 		stl, mea = [], []
 
@@ -89,10 +88,55 @@ class Parser:
 		except :
 			self.err.log('Could not parse the air quality database')
 
-	def parse_hyperplanning(self):
+	def parse_hyperplanning(self, tem, room):
+
+		pwd = '../Presences/{}.txt', 'r'.format(room)
+
+		def read(raw) :
+
+			dbs = {}
+
+			for line in raw.readlines() :
+				item = line.split(',') 
+
+				if item[0] not in dbs.keys() :
+					dbs[item[0]] = []
+
+				tdic = {}
+				tdic['Begin'] = item[1]
+				tdic['End'] = item[2]
+				tdic['Type'] = item[3]
+
+				if len(item) == 5 :
+					tdic['Students'] = item[4]
+
+				dbs[item[0]].append(tdic)
+		
+			return(dbs)
 
 		try :
+			raw = open(pwd, 'r')
+			dbs = read(raw)
+			raw.close()
 
+			if self.dte.strftime('%d/%m/%Y') not in dbs.keys() :
+				return tem, np.zeros(len(tem))
+			else :
+				hyp = []
+				for tme in dbs[self.dte.strftime('%d/%m/%Y')] :
+					l1 = [float(e) for e in tme['Begin'].split(':')]            
+					t1 = l1[0] + l1[1]/60.0
+					l2 = [float(e) for e in tme['End'].split(':')]            
+					t2 = l2[0] + l2[1]/60.0 
+					hyp += range(t1, t2, 0.1)
+
+				val = []
+				for ele in tem :
+					if ele in hyp : val.append(True)
+					else : val.append(False)
+					
+		except :
+			self.err.log('Could not parse the hyperplanning for room {}'.format(room))
 
 # Job aiming at creating and updating the desired databases
 
