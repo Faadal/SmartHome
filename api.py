@@ -283,12 +283,12 @@ class RequestQAI:
 			if ind == 0 : 
 				pwd = '../AirQuality/QAI_LCSQA'
 				lab = ['IndMoyen', 'NO2', 'PM10', 'SO2', 'O3']
-				idx = np.asarray([date.today()])
+				idx = np.asarray([self.date])
 				raw = np.asarray([raw])
 			elif ind == 1 : 
 				pwd = '../AirQuality/QAI_PARIF'
 				lab = ['Location', 'IndMoyen', 'NO2', 'O3', 'PM10']
-				idx = np.asarray([date.today(), date.today()])
+				idx = np.asarray([self.date, self.date])
 				raw = np.asarray(raw)
 
 			if not os.path.exists(pwd) :
