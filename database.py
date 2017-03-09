@@ -180,20 +180,11 @@ class Database:
 
 		return remove_doublon(val)
 
-	def build_from_scratch(self):
+	def add_date_to_database(self, date):
 
-		srt = datetime.date(2016,1,1)
-		end = datetime.date.today() - datetime.timedelta(days=1)
 		pwd = '../Databases/DB_{}'.format(self.ort)
 
-		if os.path.exists(pwd) :
-			self.err.log('Will not build the entire database from scratch')
-		else :
-			self.msg.log('Initialize database creation for room {}'.format(self.ort))
-			
-			ava = self.available_dates(srt, end)
-
-			idx, raw = [], []
+		idx, raw = [], []
 
 			mis = np.zeros(len(time_slot('T')))
 			mis[:] = np.NaN
@@ -309,7 +300,17 @@ class Database:
 			except :
 				self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
 
-#	def update(self):
+	def update_database(self):
+
+		srt = datetime.date(2016,1,1)
+		end = datetime.date.today() - datetime.timedelta(days=1)
+
+		if os.path.exists(pwd) :
+			self.err.log('Will not build the entire database from scratch')
+		else :
+			self.msg.log('Initialize database creation for room {}'.format(self.ort))
+			
+			ava = self.available_dates(srt, end)
 
 if __name__ == '__main__':
 	par = Parser(datetime.date.today() - datetime.timedelta(days=5))
