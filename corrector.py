@@ -11,6 +11,7 @@ from dateutil.rrule import rrule, DAILY
 
 from api import *
 from error import *
+from database import *
 
 # Job aiming at collecting data for all missing days
 
@@ -73,3 +74,25 @@ class Corrector:
 			wea.get_data()
 
 		self.msg.log('Weather database successfully updated')
+
+	def correct_database(self, room):
+
+		self.correct_wea()
+		self.correct_qai()
+
+		dbs = Database(room)
+
+		srt = datetime.datetime(2016, 3, 1).date()
+		end = datetime.date.today() - datetime.timedelta(days=1)
+
+		pwd = '../Databases/DB_{}'.format(dbs.ort)
+
+		if not os.path.exists(pwd) :
+			for dte in rrule(DAILY, dtstart=srt, until=end)
+				dbs.add_row_to_database(dte)
+		else :
+			ava = dbs.available_dates(srt, end)
+			dtf = read_pickle(pwd)
+			for dte in ava :
+				if dte not in dtf.index :
+					dbs.add_row_to_database(dte)
