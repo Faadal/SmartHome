@@ -14,7 +14,7 @@ from error import *
 
 class Sampler:
 
-	def __init__(self, date=datetime.date.today()):
+	def __init__(self, date=datetime.date.today()-datetime.timedelta(days=1)):
 		self.dte = date
 		self.err = Error()
 		self.msg = Messenger()
