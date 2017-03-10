@@ -114,10 +114,10 @@ class Corrector:
 
 		if not os.path.exists(pwd) :
 			for dte in tqdm.tqdm(rrule(DAILY, dtstart=srt, until=end)) :
-				dbs.add_row_to_database(dte)
+				dbs.add_date_to_database(dte)
 		else :
 			ava = dbs.available_dates(srt, end)
 			dtf = read_pickle(pwd)
 			for dte in tqdm.tqdm(ava) :
 				if dte not in dtf.index :
-					dbs.add_row_to_database(dte)
+					dbs.add_date_to_database(dte)
