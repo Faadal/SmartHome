@@ -81,7 +81,6 @@ class Parser:
 
 		try :
 			raw = pd.read_pickle('../AirQuality/QAI_LCSQA')
-			print(raw)
 			stl = raw[self.dte:self.dte].index
 			val = raw[self.dte:self.dte].values
 
@@ -180,139 +179,151 @@ class Database:
 
 		return remove_doublon(val)
 
-	def add_date_to_database(self, date):
+	def add_date_to_database(self, dte):
 
 		pwd = '../Databases/DB_{}'.format(self.ort)
 
 		idx, raw = [], []
 
-			mis = np.zeros(len(time_slot('T')))
-			mis[:] = np.NaN
+		mis = np.zeros(len(time_slot('T')))
+		mis[:] = np.NaN
 
-			for dte in tqdm.tqdm(ava) :
-				par = Parser(dte)
-				
-				tim, new, idx = time_slot('T'), [], []
+		par = Parser(dte)
+		
+		tim, new, idx = time_slot('T'), [], []
 
-				# Deals with non homogeneous samples
-				stl, m_T = par.parse_measures('T', self.ort)
-				if stl != len(tim) :
-					m_T = remplissage(time_process('T', stl, m_T))
-				elif len(m_T) == 0 :
-					m_T = copy.copy(mis)
-				
-				stl, m_H = par.parse_measures('H', self.ort)
-				if stl != len(tim) :
-					m_H = remplissage(time_process('H', stl, m_H))
-				elif len(m_H) == 0 :
-					m_H = copy.copy(mis)
-				
-				stl, m_L = par.parse_measures('L', self.ort)
-				if stl != len(tim) :
-					m_L = remplissage(time_process('T', stl, m_L))
-				elif len(m_L) == 0 :
-					m_L = copy.copy(mis)
+		# Deals with non homogeneous samples
+		stl, m_T = par.parse_measures('T', self.ort)
+		if len(stl) != len(tim) :
+			m_T = remplissage(time_process('T', stl, m_T))
+		elif len(m_T) == 0 :
+			m_T = copy.copy(mis)
+		
+		stl, m_H = par.parse_measures('H', self.ort)
+		if len(stl) != len(tim) :
+			m_H = remplissage(time_process('H', stl, m_H))
+		elif len(m_H) == 0 :
+			m_H = copy.copy(mis)
+		
+		stl, m_L = par.parse_measures('L', self.ort)
+		if len(stl) != len(tim) :
+			m_L = remplissage(time_process('T', stl, m_L))
+		elif len(m_L) == 0 :
+			m_L = copy.copy(mis)
 
-				stl, T_C = par.parse_measures_sensor('TC')
-				if stl != len(tim) :
-					T_C = remplissage(time_process('T', stl, T_C))
-				elif len(T_C) == 0 :
-					T_C = copy.copy(mis)
+		stl, T_C = par.parse_measures_sensor('TC')
+		if len(stl) != len(tim) :
+			T_C = remplissage(time_process('T', stl, T_C))
+		elif len(T_C) == 0 :
+			T_C = copy.copy(mis)
 
-				stl, H_C = par.parse_measures_sensor('HC')
-				if stl != len(tim) :
-					H_C = remplissage(time_process('T', stl, H_C))
-				elif len(H_C) == 0 :
-					H_C = copy.copy(mis)
+		stl, H_C = par.parse_measures_sensor('HC')
+		if len(stl) != len(tim) :
+			H_C = remplissage(time_process('T', stl, H_C))
+		elif len(H_C) == 0 :
+			H_C = copy.copy(mis)
 
-				stl, L_C = par.parse_measures_sensor('LC')
-				if stl != len(tim) :
-					L_C = remplissage(time_process('T', stl, L_C))
-				elif len(L_C) == 0 :
-					L_C = copy.copy(mis)
+		stl, L_C = par.parse_measures_sensor('LC')
+		if len(stl) != len(tim) :
+			L_C = remplissage(time_process('T', stl, L_C))
+		elif len(L_C) == 0 :
+			L_C = copy.copy(mis)
 
-				stl, T_E = par.parse_measures_sensor('TE')
-				if stl != len(tim) :
-					T_E = remplissage(time_process('T', stl, T_E))
-				elif len(T_E) == 0 :
-					T_E = copy.copy(mis)
+		stl, T_E = par.parse_measures_sensor('TE')
+		if len(stl) != len(tim) :
+			T_E = remplissage(time_process('T', stl, T_E))
+		elif len(T_E) == 0 :
+			T_E = copy.copy(mis)
 
-				stl, hyp = par.parse_hyperplanning(tim, self.ort)
-				if len(hyp) == 0 :
-					hyp = copy.copy(mis)
+		stl, hyp = par.parse_hyperplanning(tim, self.ort)
+		if len(hyp) == 0 :
+			hyp = copy.copy(mis)
 
-				stl, wea = par.parse_weather()
-				stl = [float(ele.hour) + float(ele.minute)/60.0 for ele in stl]
-				if stl != len(tim) :
-					wea = [remplissage(time_process('T', stl, ele)) for ele in wea]
-				elif len(wea) == 0 :
-					wea = copy.copy(mis)
+		stl, tem = par.parse_weather()
+		wea = []
+		stl = [float(ele.hour) + float(ele.minute)/60.0 for ele in stl]
+		for ind, lab in enumerate(self.lab_wea) :
+			val = []
+			for ele in tem :
+				if lab == 'summary' :
+					val.append(str(ele[ind]))
+				else :
+					val.append(float(ele[ind]))
+			wea.append(val)
+		if len(stl) != len(tim) :
+			tem = []
+			for ele in wea[1:] :
+				tem.append(remplissage(time_process('T', stl, ele)))
+			wea = copy.copy(tem)
+		elif len(wea) == 0 :
+			wea = np.asarray([0 for k in range(12)] for k in range(24))
+			wea[:] = np.NaN
 
-				stl, qai = par.parse_qai()
-				if len(qai) == 0 :
-					qai = np.zeros(len(qai))
-					qai[:] = np.NaN
+		stl, qai = par.parse_qai()
+		if len(qai) == 0 :
+			qai = np.zeros(len(qai))
+			qai[:] = np.NaN
 
-				for ind, ele in enumerate(tim) :
-					raw = []
-					# Add the corresponding index
-					idx.append(datetime.datetime(dte.year, dte.month, dte.day, int(ele), int((ele-int(ele))*60)))
-					# Minute
-					raw.append(int((ele-int(ele))*60))
-					# Hour
-					raw.append(int(ele))
-					# Day
-					raw.append(dte.day)
-					# Weekday
-					raw.append(dte.weekday())
-					# Week number
-					raw.append(dte.isocalendar()[1])
-					# Month
-					raw.append(dte.month)
-					# Year
-					raw.append(dte.year)
-					# Temperature measure
-					raw.append(m_T[ind])
-					# Humidity measure
-					raw.append(m_H[ind])
-					# Luminosity measure
-					raw.append(m_L[ind])
-					# Hall temperature
-					raw.append(T_C[ind])
-					# Hall humidity
-					raw.append(H_C[ind])
-					# Hall luminosity
-					raw.append(L_C[ind])
-					# External temperature
-					raw.append(T_E[ind])
-					# Busy
-					raw.append(hyp[ind])
-					# Weather
-					raw += list(wea)
-					# Air quality
-					raw += list(qai)
+		for ind, ele in enumerate(tim) :
+			raw = []
+			# Add the corresponding index
+			idx.append(datetime.datetime(dte.year, dte.month, dte.day, int(ele), int((ele-int(ele))*60)))
+			# Minute
+			raw.append(int((ele-int(ele))*60))
+			# Hour
+			raw.append(int(ele))
+			# Day
+			raw.append(dte.day)
+			# Weekday
+			raw.append(dte.weekday())
+			# Week number
+			raw.append(dte.isocalendar()[1])
+			# Month
+			raw.append(dte.month)
+			# Year
+			raw.append(dte.year)
+			# Temperature measure
+			raw.append(m_T[ind])
+			# Humidity measure
+			raw.append(m_H[ind])
+			# Luminosity measure
+			raw.append(m_L[ind])
+			# Hall temperature
+			raw.append(T_C[ind])
+			# Hall humidity
+			raw.append(H_C[ind])
+			# Hall luminosity
+			raw.append(L_C[ind])
+			# External temperature
+			raw.append(T_E[ind])
+			# Busy
+			raw.append(hyp[ind])
+			# Weather
+			for ind, ele in enumerate(wea) :
+				if ind == 0 :
+					raw.append(ele[int(ind/10.0)])
+				else :
+					raw.append(ele[ind])
+			# Air quality
+			raw += list(qai)
 
-				new.append(np.asarray(raw))
+		new.append(np.asarray(raw), dtype=object)
 
-			try :
+		try :
+			if not os.path.exist(pwd) :
 				pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=np.asarray(lab)).to_pickle(pwd)
 				self.msg.log('Database successfully build for room {}'.format(self.ort))
-			except :
-				self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
+			else :
+				dtf = pd.read_pickle(pwd)
+				new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab)
+				dtf = pd.concat([dtf, new])
+				dtf.to_pickle(pwd)
+				self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, date.strftime('%d-%m-%Y')))
+		except :
+			self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
 
-	def update_database(self):
+	def update(self):
 
-		srt = datetime.date(2016,1,1)
-		end = datetime.date.today() - datetime.timedelta(days=1)
+		dte = datetime.date.today() - datetime.timedelta(days=1)
 
-		if os.path.exists(pwd) :
-			self.err.log('Will not build the entire database from scratch')
-		else :
-			self.msg.log('Initialize database creation for room {}'.format(self.ort))
-			
-			ava = self.available_dates(srt, end)
-
-if __name__ == '__main__':
-	par = Parser(datetime.date.today() - datetime.timedelta(days=5))
-	s, v = par.parse_hyperplanning(time_slot('T'), 'N227')
-	print(v)
+		dbs = self.add_date_to_database(dte)
