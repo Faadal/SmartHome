@@ -7,6 +7,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import tqdm
+import time
 
 from dateutil.rrule import rrule, DAILY
 
@@ -40,28 +41,35 @@ class Corrector:
 			for dte in rrule(DAILY, dtstart=self.str, until=self.end) :
 				mis.append(dte.date())
 
-			return missing
+			return mis
 
 		else :
-			raw = pd.read_pickle(db) :
+			raw = pd.read_pickle(db)
 			for dte in rrule(DAILY, dtstart=self.str, until=self.end) :
 				tem = dte.date()
-				idx = remove_doublon([ele.date() for ele in raw.index])
+				# Depending on the database, the indexes are date or datetime types - avoid conflicts and error types
+				try :
+					# Corresponds to the weather database
+					idx = remove_doublon([ele.date() for ele in raw.index])
+				except :
+					# Corresponds to the airquaity database
+					idx = remove_doublon([ele for ele in raw.index])
 				if tem in idx and np.isnan(raw[tem:tem].values[0][0]) :
 					mis.append(tem)
 				elif tem not in idx :
 					mis.append(tem)
 
-			return missing
+			return mis
 
 	def correct_qai(self):
 
 		mis = self.get_missing('../AirQuality/QAI_LCSQA')
 		self.msg.log('Air quality lacks {} days of collection'.format(len(mis)))
 
-		for dte in mis :
+		for dte in tqdm.tqdm(mis) :
 			qai = RequestQAI(dte)
 			qai.get_data()
+			time.sleep(1)
 
 		self.msg.log('Air quality database successfully updated')
 
@@ -70,9 +78,10 @@ class Corrector:
 		mis = self.get_missing('../Weather/WEA')
 		self.msg.log('Weather lacks {} days of collection'.format(len(mis)))
 
-		for dte in mis :
+		for dte in tqdm.tqdm(mis) :
 			wea = RequestWeather(dte)
 			wea.get_data()
+			time.sleep(1)
 
 		self.msg.log('Weather database successfully updated')
 
