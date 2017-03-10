@@ -3,7 +3,6 @@
 # Imports
 
 import schedule
-import datetime
 import time
 
 from api import *
@@ -21,9 +20,9 @@ schedule.every().day.at('23:15').do(RequestQAI().get_data())
 
 schedule.every().day.at('23:30').do(RequestWeather().get_data())
 
-schedule.every().day.at('23:45').do(Sampler().get_samples())
+schedule.every().day.at('00:15').do(Sampler().get_samples())
 
-# Schedule to correct databases once a week
+schedule.every().day.at('00:30').do(Database('N227').update())
 
 # Schedule to update database once a day
 
