@@ -25,7 +25,7 @@ class Corrector:
 		# First measurement on March the third
 		self.str = datetime.date(2016, 3, 1)
 		# Last day of correction
-		self.end = datetime.date.today()
+		self.end = datetime.date.today() - datetime.timedelta(days=1)
 
 	def get_missing(self, db):
 
@@ -52,9 +52,24 @@ class Corrector:
 					# Corresponds to the weather database
 					idx = remove_doublon([ele.date() for ele in raw.index])
 				except :
-					# Corresponds to the airquaity database
+					# Corresponds to the airquality database
 					idx = remove_doublon([ele for ele in raw.index])
-				if tem in idx and np.isnan(raw[tem:tem].values[0][0]) :
+
+				# Preprocessing to clear the database with same indexes
+				if tem in idx and len(raw.loc[tem]) != len(raw.columns) :
+					bit = np.zeros(len(raw.columns))
+					bit[:] = np.NaN
+					for ele in raw.loc[tem].values :
+						if not np.isnan(ele[1]) :
+							bit = ele
+					raw = raw.drop(tem)
+					new = pd.DataFrame(data=np.asarray([bit]), index=np.asarray([tem]), columns=np.asarray(raw.columns))
+					raw = pd.concat([raw, new])
+				
+				raw.to_pickle(db)
+
+				# Remove conflict with double indexing
+				if tem in idx and np.isnan(float(raw[tem:tem].values[0][1])) :
 					mis.append(tem)
 				elif tem not in idx :
 					mis.append(tem)
@@ -71,7 +86,7 @@ class Corrector:
 			qai.get_data()
 			time.sleep(1)
 
-		self.msg.log('Air quality database successfully updated')
+		self.msg.log('Air quality database successfully updated for the {}'.format(dte.strftime('%Y-%m-%d')))
 
 	def correct_wea(self):
 
