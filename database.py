@@ -84,7 +84,7 @@ class Parser:
 			stl = raw[self.dte:self.dte].index
 			val = raw[self.dte:self.dte].values
 
-			return stl, val
+			return stl, val[0]
 		except :
 			self.err.log('Could not parse the air quality database')
 
@@ -165,7 +165,7 @@ class Database:
 		self.lab_wea = ['summary', 'aTwea', 'cover', 'dewPoint', 'Hwea', 'ozone', 'rainFall', 'rainProb', 'Pwea', 'Twea', 'windExposure', 'windSpeed']
 		self.lab_qai = ['IndMoyen', 'NO2', 'PM10', 'SO2', 'O3']
 
-		self.lab = self.lab_cla + self.lab_hyp + self.lab_mea + self.lab_wea + self.lab_qai
+		self.lab = self.lab_cla + self.lab_mea + self.lab_hyp + self.lab_wea + self.lab_qai
 		
 		# Classical user-friendly objects
 		self.err = Error()
@@ -251,12 +251,12 @@ class Database:
 					val.append(float(ele[ind]))
 			wea.append(val)
 		if len(stl) != len(tim) :
-			tem = []
+			tem = [wea[0]]
 			for ele in wea[1:] :
 				tem.append(remplissage(time_process('T', stl, ele)))
 			wea = copy.copy(tem)
 		elif len(wea) == 0 :
-			wea = np.asarray([0 for k in range(12)] for k in range(24))
+			wea = np.asarray([0 for k in range(12)] for k in range(len(tim)))
 			wea[:] = np.NaN
 
 		stl, qai = par.parse_qai()
@@ -300,6 +300,7 @@ class Database:
 			raw.append(hyp[ind])
 			# Weather
 			for ind, ele in enumerate(wea) :
+				# Solved the conflict with the string type
 				if ind == 0 :
 					raw.append(ele[int(ind/10.0)])
 				else :
@@ -307,18 +308,20 @@ class Database:
 			# Air quality
 			raw += list(qai)
 
-		new.append(np.asarray(raw), dtype=object)
+			new.append(np.asarray(raw))
+
+		if not os.path.exists(pwd) :
+			pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=np.asarray(self.lab)).to_pickle(pwd)
+			self.msg.log('Database successfully build for room {}'.format(self.ort))
+		else :
+			dtf = pd.read_pickle(pwd)
+			new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab)
+			dtf = pd.concat([dtf, new])
+			dtf.to_pickle(pwd)
+			self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, date.strftime('%d-%m-%Y')))
 
 		try :
-			if not os.path.exist(pwd) :
-				pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=np.asarray(lab)).to_pickle(pwd)
-				self.msg.log('Database successfully build for room {}'.format(self.ort))
-			else :
-				dtf = pd.read_pickle(pwd)
-				new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab)
-				dtf = pd.concat([dtf, new])
-				dtf.to_pickle(pwd)
-				self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, date.strftime('%d-%m-%Y')))
+			pass
 		except :
 			self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
 
