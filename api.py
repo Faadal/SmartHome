@@ -268,17 +268,17 @@ class RequestQAI:
 				req = html.fromstring(requests.get(url).content)
 				dic = etreeToDict(req)
 				raw = self.extract(url, dic)
-				if ind == 0 : self.msg.log('LCSQA website has been scrapped')
-				elif ind == 1 : self.msg.log('AIRPARIF website has been scrapped')
+				if ind == 0 : self.msg.log('LCSQA website has been scrapped for day {}'.format(self.date.strftime('%Y-%m-%d')))
+				elif ind == 1 : self.msg.log('AIRPARIF website has been scrapped for day {}'.format(self.date.strftime('%Y-%m-%d')))
 			except :
 				if ind == 0 : 
-					raw = [np.empty(5)]
+					raw = np.empty(5)
 					raw[:] = np.NaN
-					self.err.log('Could not extract intel from LCSQA')
+					self.err.log('Could not extract intel from LCSQA for the {}'.format(self.date.strftime('%Y-%m-%d')))
 				elif ind == 1 :
 					raw = np.empty((2, 5))
 					raw[:] = np.NaN
-					self.err.log('Could not extract intel from PARIF')
+					self.err.log('Could not extract intel from PARIF for the {}'.format(self.date.strftime('%Y-%m-%d')))
 
 			if ind == 0 : 
 				pwd = '../AirQuality/QAI_LCSQA'
