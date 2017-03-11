@@ -314,7 +314,7 @@ class RequestWeather:
 		self.lat = '48.8534'
 		self.lon = '2.3488'
 		self.day = str(self.dte) + 'T00:00:00'
-		self.url = 'https://api.darksky.net/forecast/{}/{},{},{}'.format(self.usr, self.lat, self.lon, self.day)
+		self.url = 'https://api.darksky.net/forecast/{}/{},{},{}?units=si'.format(self.usr, self.lat, self.lon, self.day)
 
 	def get_data(self):
 
