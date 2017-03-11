@@ -20,13 +20,15 @@ from database import *
 
 class Corrector:
 
-	def __init__(self):
+	def __init__(self, room):
 		self.err = Error()
 		self.msg = Messenger()
 		# First measurement on March the third
 		self.str = datetime.date(2016, 3, 1)
 		# Last day of correction
 		self.end = datetime.date.today() - datetime.timedelta(days=1)
+		# Defining the room
+		self.ort = room
 
 	def get_missing(self, db):
 
@@ -94,12 +96,12 @@ class Corrector:
 
 		self.msg.log('Weather database successfully updated')
 
-	def correct_database(self, room):
+	def correct_database(self):
 
 		self.correct_wea()
 		self.correct_qai()
 
-		dbs = Database(room)
+		dbs = Database(self.ort)
 
 		pwd = '../Databases/DB_{}'.format(dbs.ort)
 
