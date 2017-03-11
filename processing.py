@@ -79,7 +79,7 @@ class Sampler:
 
 			try :
 				ful = remplissage(list(tab))
-				pwd = open('../Sample/Sam_{}_{}_{}.txt'.format(self.dte.strftime('%d-%m-%Y'), sensor[:1], sensor[1:]), 'w')
+				pwd = open('../Sample/Sam_{}-{}_{}.txt'.format(self.dte.strftime('%d-%m-%Y'), sensor[:1], sensor[1:]), 'w')
 				pwd.write(str(time_slot(sensor))+'\n')
 				pwd.write(str(ful)+'\n')
 				pwd.close()

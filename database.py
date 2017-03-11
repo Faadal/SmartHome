@@ -26,7 +26,7 @@ class Parser:
 
 	def parse_measures_sensor(self, sensor):
 
-		pwd = '../Sample/Sam_{}_{}_{}.txt'.format(self.dte.strftime('%d-%m-%Y'), sensor[:1], sensor[1:])
+		pwd = '../Sample/Sam_{}-{}_{}.txt'.format(self.dte.strftime('%d-%m-%Y'), sensor[:1], sensor[1:])
 
 		try :
 			raw = open(pwd, 'r')
@@ -199,47 +199,47 @@ class Database:
 		if len(stl) != len(tim) :
 			m_T = remplissage(time_process('T', stl, m_T))
 		elif len(m_T) == 0 :
-			m_T = copy.copy(mis)
-		
+			m_T = mis
+
 		stl, m_H = par.parse_measures('H', self.ort)
 		if len(stl) != len(tim) :
 			m_H = remplissage(time_process('H', stl, m_H))
 		elif len(m_H) == 0 :
-			m_H = copy.copy(mis)
+			m_H = mis
 		
 		stl, m_L = par.parse_measures('L', self.ort)
 		if len(stl) != len(tim) :
 			m_L = remplissage(time_process('T', stl, m_L))
 		elif len(m_L) == 0 :
-			m_L = copy.copy(mis)
+			m_L = mis
 
 		stl, T_C = par.parse_measures_sensor('TC')
 		if len(stl) != len(tim) :
 			T_C = remplissage(time_process('T', stl, T_C))
 		elif len(T_C) == 0 :
-			T_C = copy.copy(mis)
+			T_C = mis
 
 		stl, H_C = par.parse_measures_sensor('HC')
 		if len(stl) != len(tim) :
 			H_C = remplissage(time_process('T', stl, H_C))
 		elif len(H_C) == 0 :
-			H_C = copy.copy(mis)
+			H_C = mis
 
 		stl, L_C = par.parse_measures_sensor('LC')
 		if len(stl) != len(tim) :
 			L_C = remplissage(time_process('T', stl, L_C))
 		elif len(L_C) == 0 :
-			L_C = copy.copy(mis)
+			L_C = mis
 
 		stl, T_E = par.parse_measures_sensor('TE')
 		if len(stl) != len(tim) :
 			T_E = remplissage(time_process('T', stl, T_E))
 		elif len(T_E) == 0 :
-			T_E = copy.copy(mis)
+			T_E = mis
 
 		stl, hyp = par.parse_hyperplanning(tim, self.ort)
 		if len(hyp) == 0 :
-			hyp = copy.copy(mis)
+			hyp = mis
 
 		stl, tem = par.parse_weather()
 		wea = []
@@ -253,7 +253,12 @@ class Database:
 					val.append(float(ele[ind]))
 			wea.append(val)
 		if len(stl) != len(tim) :
-			tem = [wea[0]]
+			tem = []
+			if len(wea[0]) < 24 :
+				que = wea[0] + [np.NaN for k in range(24 - len(wea[0]))]
+				tem.append(que)
+			else :
+				tem = [wea[0]]
 			for ele in wea[1:] :
 				try :
 					tem.append(remplissage(time_process('T', stl, ele)))
@@ -314,6 +319,8 @@ class Database:
 					raw.append(ele[ind])
 			# Air quality
 			raw += list(qai)
+
+			print(raw)
 
 			new.append(np.asarray(raw))
 
