@@ -24,9 +24,7 @@ schedule.every().day.at('00:15').do(Sampler().get_samples())
 
 schedule.every().day.at('00:30').do(Database('N227').update())
 
-# Schedule to clear what remains unnecessary once a week
-
-# Schedule for backup once a week (email ?)
+schedule.every().monday.at('12:00').do(Corrector().correct_database('N227'))
 
 # Launch
 
