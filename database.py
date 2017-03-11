@@ -252,12 +252,15 @@ class Database:
 				else :
 					val.append(float(ele[ind]))
 			wea.append(val)
-		print(stl)
-		print(wea)
 		if len(stl) != len(tim) :
 			tem = [wea[0]]
 			for ele in wea[1:] :
-				tem.append(remplissage(time_process('T', stl, ele)))
+				try :
+					tem.append(remplissage(time_process('T', stl, ele)))
+				except :
+					que = np.zeros(len(tim))
+					que[:] = np.NaN
+					tem.append(que)
 			wea = copy.copy(tem)
 		elif len(wea) == 0 :
 			wea = np.asarray([0 for k in range(12)] for k in range(len(tim)))
@@ -265,7 +268,7 @@ class Database:
 
 		stl, qai = par.parse_qai()
 		if len(qai) == 0 :
-			qai = np.zeros(len(qai))
+			qai = np.zeros(len(pd.read_pickle('../AirQuality/QAI_LCSQA').columns))
 			qai[:] = np.NaN
 
 		for ind, ele in enumerate(tim) :
@@ -319,10 +322,10 @@ class Database:
 			self.msg.log('Database successfully build for room {}'.format(self.ort))
 		else :
 			dtf = pd.read_pickle(pwd)
-			new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=lab)
+			new = pd.DataFrame(data=np.asarray(new), index=np.asarray(idx), columns=np.asarray(self.lab))
 			dtf = pd.concat([dtf, new])
 			dtf.to_pickle(pwd)
-			self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, date.strftime('%d-%m-%Y')))
+			self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, dte.strftime('%d-%m-%Y')))
 
 		try :
 			pass
