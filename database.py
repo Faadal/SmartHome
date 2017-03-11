@@ -68,8 +68,10 @@ class Parser:
 
 		try : 
 			raw = pd.read_pickle('../Weather/WEA')
-			stl = raw[self.dte:self.dte].index
-			val = raw[self.dte:self.dte].values
+			srt = datetime.datetime(self.dte.year, self.dte.month, self.dte.day, 0, 0)
+			end = srt + datetime.timedelta(hours=23, minutes=59)
+			stl = raw[srt:end].index
+			val = raw[srt:end].values
 
 			return stl, val
 		except :
@@ -250,6 +252,8 @@ class Database:
 				else :
 					val.append(float(ele[ind]))
 			wea.append(val)
+		print(stl)
+		print(wea)
 		if len(stl) != len(tim) :
 			tem = [wea[0]]
 			for ele in wea[1:] :
@@ -299,9 +303,9 @@ class Database:
 			# Busy
 			raw.append(hyp[ind])
 			# Weather
-			for ind, ele in enumerate(wea) :
+			for i, ele in enumerate(wea) :
 				# Solved the conflict with the string type
-				if ind == 0 :
+				if i == 0 :
 					raw.append(ele[int(ind/10.0)])
 				else :
 					raw.append(ele[ind])
