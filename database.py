@@ -81,15 +81,15 @@ class Parser:
 
 	def parse_qai(self):
 
+		raw = pd.read_pickle('../AirQuality/QAI_LCSQA')
+
 		try :
-			raw = pd.read_pickle('../AirQuality/QAI_LCSQA')
 			stl = raw[self.dte:self.dte].index
 			val = raw[self.dte:self.dte].values
 
 			return stl, val[0]
-		except :
-			self.err.log('Could not parse the air quality database')
 
+		except :
 			return [], []
 
 	def parse_hyperplanning(self, tem, room):
@@ -187,9 +187,6 @@ class Database:
 
 		idx, raw = [], []
 
-		mis = np.zeros(len(time_slot('T')))
-		mis[:] = np.NaN
-
 		par = Parser(dte)
 		
 		tim, new, idx = time_slot('T'), [], []
@@ -199,47 +196,47 @@ class Database:
 		if len(stl) != len(tim) :
 			m_T = remplissage(time_process('T', stl, m_T))
 		elif len(m_T) == 0 :
-			m_T = mis
+			m_T = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, m_H = par.parse_measures('H', self.ort)
 		if len(stl) != len(tim) :
 			m_H = remplissage(time_process('H', stl, m_H))
 		elif len(m_H) == 0 :
-			m_H = mis
+			m_H = np.empty(len(time_slot('T'))) * np.NaN
 		
 		stl, m_L = par.parse_measures('L', self.ort)
 		if len(stl) != len(tim) :
 			m_L = remplissage(time_process('T', stl, m_L))
 		elif len(m_L) == 0 :
-			m_L = mis
+			m_L = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, T_C = par.parse_measures_sensor('TC')
 		if len(stl) != len(tim) :
 			T_C = remplissage(time_process('T', stl, T_C))
 		elif len(T_C) == 0 :
-			T_C = mis
+			T_C = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, H_C = par.parse_measures_sensor('HC')
 		if len(stl) != len(tim) :
 			H_C = remplissage(time_process('T', stl, H_C))
 		elif len(H_C) == 0 :
-			H_C = mis
+			H_C = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, L_C = par.parse_measures_sensor('LC')
 		if len(stl) != len(tim) :
 			L_C = remplissage(time_process('T', stl, L_C))
 		elif len(L_C) == 0 :
-			L_C = mis
+			L_C = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, T_E = par.parse_measures_sensor('TE')
 		if len(stl) != len(tim) :
 			T_E = remplissage(time_process('T', stl, T_E))
 		elif len(T_E) == 0 :
-			T_E = mis
+			T_E = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, hyp = par.parse_hyperplanning(tim, self.ort)
 		if len(hyp) == 0 :
-			hyp = mis
+			hyp = np.empty(len(time_slot('T'))) * np.NaN
 
 		stl, tem = par.parse_weather()
 		wea = []
@@ -263,18 +260,14 @@ class Database:
 				try :
 					tem.append(remplissage(time_process('T', stl, ele)))
 				except :
-					que = np.zeros(len(tim))
-					que[:] = np.NaN
+					que = np.empty(len(time_slot('T'))) * np.NaN
 					tem.append(que)
 			wea = copy.copy(tem)
-		elif len(wea) == 0 :
-			wea = np.asarray([0 for k in range(12)] for k in range(len(tim)))
-			wea[:] = np.NaN
+		elif len(wea) == 0 : wea = np.empty((len(tim), 12)) * np.NaN
 
 		stl, qai = par.parse_qai()
-		if len(qai) == 0 :
-			qai = np.zeros(len(pd.read_pickle('../AirQuality/QAI_LCSQA').columns))
-			qai[:] = np.NaN
+		if len(qai) == 0 : qai = np.empty(len(pd.read_pickle('../AirQuality/QAI_LCSQA').columns)) * np.NaN
+		print(qai)
 
 		for ind, ele in enumerate(tim) :
 			raw = []
@@ -320,8 +313,6 @@ class Database:
 			# Air quality
 			raw += list(qai)
 
-			print(raw)
-
 			new.append(np.asarray(raw))
 
 		if not os.path.exists(pwd) :
@@ -333,11 +324,6 @@ class Database:
 			dtf = pd.concat([dtf, new])
 			dtf.to_pickle(pwd)
 			self.msg.log('Database successfully updated for room {} on date {}'.format(self.ort, dte.strftime('%d-%m-%Y')))
-
-		try :
-			pass
-		except :
-			self.err.log('Failed to build the dataframe for room {}'.format(self.ort))
 
 	def update(self):
 

@@ -79,9 +79,8 @@ class Corrector:
 		for dte in tqdm.tqdm(mis) :
 			qai = RequestQAI(dte)
 			qai.get_data()
+			self.msg.log('Air quality database successfully updated for the {}'.format(dte.strftime('%Y-%m-%d')))
 			time.sleep(1)
-
-		self.msg.log('Air quality database successfully updated for the {}'.format(dte.strftime('%Y-%m-%d')))
 
 	def correct_wea(self):
 
@@ -97,8 +96,8 @@ class Corrector:
 
 	def correct_database(self, room):
 
-		#self.correct_wea()
-		#self.correct_qai()
+		self.correct_wea()
+		self.correct_qai()
 
 		dbs = Database(room)
 
