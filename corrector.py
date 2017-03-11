@@ -12,6 +12,7 @@ import time
 from dateutil.rrule import rrule, DAILY
 
 from api import *
+from tools import *
 from error import *
 from database import *
 
@@ -28,12 +29,6 @@ class Corrector:
 		self.end = datetime.date.today() - datetime.timedelta(days=1)
 
 	def get_missing(self, db):
-
-		def remove_doublon(raw):
-			new = []
-			for val in raw :
-				if val not in new : new.append(val)
-			return new
 
 		mis = []
 
@@ -102,8 +97,8 @@ class Corrector:
 
 	def correct_database(self, room):
 
-		self.correct_wea()
-		self.correct_qai()
+		#self.correct_wea()
+		#self.correct_qai()
 
 		dbs = Database(room)
 
