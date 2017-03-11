@@ -21,7 +21,7 @@ def match_room(room):
 
 	# Has to evolve with the new configuration
 	if room == 'N227' :
-		return ['3', '6', '7', '8']
+		return ['3', '4', '5', '6', '7', '8']
 	else :
 		return []
 
