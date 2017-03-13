@@ -84,12 +84,13 @@ class Parser:
 		raw = pd.read_pickle('../AirQuality/QAI_LCSQA')
 
 		try :
-			stl = raw[self.dte:self.dte].index
-			val = raw[self.dte:self.dte].values
+			val = list(raw[self.dte:self.dte].values)[0]
 
-			return stl, val[0]
+			return self.dte, list(val)
 
 		except :
+			self.err.log('Could not parse the LCSQA database')
+
 			return [], []
 
 	def parse_hyperplanning(self, tem, room):
@@ -266,8 +267,7 @@ class Database:
 		elif len(wea) == 0 : wea = np.empty((len(tim), 12)) * np.NaN
 
 		stl, qai = par.parse_qai()
-		if len(qai) == 0 : qai = np.empty(len(pd.read_pickle('../AirQuality/QAI_LCSQA').columns)) * np.NaN
-		print(qai)
+		if len(qai) == 0 : qai = list(np.empty(len(pd.read_pickle('../AirQuality/QAI_LCSQA').columns)) * np.NaN)
 
 		for ind, ele in enumerate(tim) :
 			raw = []
@@ -311,7 +311,7 @@ class Database:
 				else :
 					raw.append(ele[ind])
 			# Air quality
-			raw += list(qai)
+			raw = raw + qai
 
 			new.append(np.asarray(raw))
 

@@ -98,18 +98,16 @@ class Corrector:
 
 	def correct_database(self):
 
-		self.correct_wea()
-		self.correct_qai()
-
 		dbs = Database(self.ort)
 
 		pwd = '../Databases/DB_{}'.format(dbs.ort)
 
+		ava = dbs.available_dates(self.str, self.end)
+
 		if not os.path.exists(pwd) :
-			for dte in tqdm.tqdm(rrule(DAILY, dtstart=self.str, until=self.end)) :
+			for dte in tqdm.tqdm(ava) :
 				dbs.add_date_to_database(dte)
 		else :
-			ava = dbs.available_dates(self.str, self.end)
 			dtf = pd.read_pickle(pwd)
 			for dte in tqdm.tqdm(ava) :
 				if dte not in dtf.index :
