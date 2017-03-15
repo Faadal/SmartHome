@@ -26,9 +26,9 @@ schedule.every().day.at('05:00').do(Corrector('N227').correct_wea)
 # Check missing dates and correct it
 schedule.every().day.at('05:30').do(Corrector('N227').correct_qai)
 # Work on previous day
-schedule.every().day.at('06:00').do(Sampler().get_samples)
+schedule.every().day.at('09:00').do(Sampler().get_samples)
 # Work on previous day
-schedule.every().day.at('06:30').do(Database('N227').update)
+schedule.every().day.at('09:30').do(Database('N227').update)
 # Check missing dates and correct it
 schedule.every().day.at('12:00').do(Corrector('N227').correct_database)
 
