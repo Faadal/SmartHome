@@ -1,0 +1,15 @@
+version: '2'
+
+services:
+  smart_home:
+    image: smart_home
+    volumes:
+      - ./Acquisition:/Acquisition
+      - ./AirQuality:/AirQuality
+      - ./Data:/Data
+      - ./Databases:/Databases
+      - ./Presences:/Presences
+      - ./Sample:/Sample
+      - ./Weather:/Weather
+      - ./Scripts:/Scripts
+    restart: always
