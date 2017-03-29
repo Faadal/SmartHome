@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import os
 
+from pyfoobot import Foobot
 from datetime import date
 from lxml import html
 from collections import defaultdict
@@ -143,6 +144,67 @@ class RequestEedomus:
 			for v in val : raw.write(str(v) + ';')
 			self.msg.log('Acquisition completed for T_E')
 			raw.close()
+
+import datetime
+
+# Class implementing the Foobot API
+
+class RequestFoobot:
+
+	def __init__(self):
+
+		self.key = 'eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoibWVyeWxsLmRpbmRpbkBzdHVkZW50L	mVjcC5mciIsImlhdCI6MTQ5MDcxNDIzMiwidmFsaWRpdHkiOi0xLCJqdGkiOiJjNjUxOT		M0Yi03OGQyLTQ4ZmQtYjE1ZS1lZGZiMWEwNmZjMmEiLCJwZXJtaXNzaW9ucyI6WyJ1c2VyOnJlYWQiLCJkZXZpY2U6cmVhZCJdLCJxdW90YSI6MjAwLCJyYXRlTGltaXQiOjV9.49NuyVZQk4Z6ZpBAm2p_7g_oZfktUO-3IL9h7V0aPwc'
+		self.usr = 'meryll.dindin@student.ecp.fr'
+		self.pwd = 'bo_yo!2015'
+		self.sen = Logs()
+		self.err = Error()
+		self.msg = Messenger()
+
+		try :
+			self.api = Foobot(self.key, self.usr, self.pwd)
+			self.dev = self.api.devices()
+			self.msg.log('Connection to Foobots successful')
+		except :
+			self.err.log('Failed connection to Foobots')
+		
+	def get_data(self):
+
+		for ind, foo in enumerate(tqdm.tqdm(self.dev)) :
+
+			self.sen.log('Foobot {} does respond to request'.format(ind))
+
+			# Get the data from the last 25 hours
+			raw = foo.data_period(24*60*60, 0)
+
+			tim, val = [], []
+			lab = ['PM10', 'T', 'H', 'CO2', 'VOC', 'PolIndex']
+
+			try :
+				for ele in raw['datapoints'] :
+					
+					tim.append(datetime.datetime.fromtimestamp(int(ele[0])))
+					val.append(np.asarray([float(e) for e in ele[1:]]))
+
+				self.msg.log('Successfully extracted the weather intel for {}'.format(self.dte))
+			
+			except :
+				self.err.log('Could not gather intel for Foobot {} on {}'.format(ind, datetime.date().today().srtftime('%d-%m-%Y')))
+
+			pwd = '../Data/Foobot_{}'.format(ind)
+
+			if not os.path.exists(pwd) :
+				pd.DataFrame(data=np.asarray(val), index=np.asarray(tim), columns=lab).to_pickle(pwd)
+			else :
+				dtf = pd.read_pickle(pwd)
+				new = pd.DataFrame(data=np.asarray(val), index=np.asarray(tim), columns=lab)
+				dtf = pd.concat([dtf, new])
+
+				
+
+				dtf.to_pickle(pwd)
+
+			self.msg.log('{} successfully updated'.format(pwd))
+
 
 # Job aiming at gathering intel about air quality out of two websites	
 
