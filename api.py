@@ -156,6 +156,7 @@ class RequestFoobot:
 		self.key = 'eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoibWVyeWxsLmRpbmRpbkBzdHVkZW50L	mVjcC5mciIsImlhdCI6MTQ5MDcxNDIzMiwidmFsaWRpdHkiOi0xLCJqdGkiOiJjNjUxOT		M0Yi03OGQyLTQ4ZmQtYjE1ZS1lZGZiMWEwNmZjMmEiLCJwZXJtaXNzaW9ucyI6WyJ1c2VyOnJlYWQiLCJkZXZpY2U6cmVhZCJdLCJxdW90YSI6MjAwLCJyYXRlTGltaXQiOjV9.49NuyVZQk4Z6ZpBAm2p_7g_oZfktUO-3IL9h7V0aPwc'
 		self.usr = 'meryll.dindin@student.ecp.fr'
 		self.pwd = 'bo_yo!2015'
+		self.dte = datetime.date.today()
 		self.sen = Logs()
 		self.err = Error()
 		self.msg = Messenger()
@@ -185,7 +186,7 @@ class RequestFoobot:
 					tim.append(datetime.datetime.fromtimestamp(int(ele[0])))
 					val.append(np.asarray([float(e) for e in ele[1:]]))
 
-				self.msg.log('Successfully extracted the weather intel for {}'.format(self.dte))
+				self.msg.log('Foobot {} extraction successful on the {}'.format(ind, self.dte))
 			
 			except :
 				self.err.log('Could not gather intel for Foobot {} on {}'.format(ind, datetime.date().today().srtftime('%d-%m-%Y')))
@@ -197,14 +198,15 @@ class RequestFoobot:
 			else :
 				dtf = pd.read_pickle(pwd)
 				new = pd.DataFrame(data=np.asarray(val), index=np.asarray(tim), columns=lab)
-				dtf = pd.concat([dtf, new])
 
+				for ele in tim : 
+					if ele in dtf.index :
+						new = new.drop(ele)
 				
-
+				dtf = pd.concat([dtf, new])
 				dtf.to_pickle(pwd)
 
 			self.msg.log('{} successfully updated'.format(pwd))
-
 
 # Job aiming at gathering intel about air quality out of two websites	
 
