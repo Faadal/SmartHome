@@ -23,7 +23,7 @@ def match_room(room):
 	if room == 'N227' :
 		return ['3', '6', '7', '8']
 	elif room == 'E203' :
-		return ['1', '2',' 4']
+		return ['1', '2', '4']
 	else :
 		return []
 
