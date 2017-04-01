@@ -15,6 +15,16 @@ def remove_doublon(raw):
 
 	return new
 
+# Define the mail adresses that wanna keep up with the sensors
+
+def list_emails() :
+
+	mel = []
+	mel.append('meryll.dindin@student.ecp.fr')
+	mel.append('smart.home.ecp@gmail.com')
+
+	return mel
+
 # Define the sensors corresponding to a given room
 
 def match_room(room):

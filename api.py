@@ -9,13 +9,17 @@ import tqdm
 import numpy as np
 import pandas as pd
 import os
+import smtplib
+import datetime
 
 from pyfoobot import Foobot
 from datetime import date
 from lxml import html
 from collections import defaultdict
+from dateutil import parser
 
 from error import *
+from tools import *
 
 # Define class request for data gathering
 
@@ -145,7 +149,46 @@ class RequestEedomus:
 			self.msg.log('Acquisition completed for T_E')
 			raw.close()
 
-import datetime
+	# Interact with the 
+
+	def send_status_sensors(self):
+
+		self.get_peripheriques()
+
+		msg = 'Hi, here is a little summary of the situation ! \n \n'
+
+		for room in ['E203', 'N227'] :
+
+			msg += '|-> Room {} : \n \n'.format(room)
+			sen = match_room(room)
+			
+			for ind in sen :
+				if len(ind) == 1 : ind = '0' + ind
+				per = str(self.per['Temperature {} Salle'.format(ind)])
+				get = requests.get('https://api.eedomus.com/get?action=periph.caract&periph_id={}&api_user={}&api_secret={}'.format(per, self.usr, self.pwd))
+				dte = parser.parse(get.json()['body']['last_value_change'][:10])
+				
+				if dte.date() != datetime.date.today() :
+					msg += '    Sensor {} last emitted the {} \n'.format(ind, dte.strftime('%d-%m-%Y'))
+					msg += ' ->   Check the battery \n'
+				else :
+					msg += '    Sensor {} responds correctly \n'.format(ind)
+
+			msg += '\n'
+
+		for ele in list_emails() :
+			hst= 'smtp.gmail.com'
+			sub = '[{}] Sensors status'.format(datetime.date.today().strftime('%d-%m-%Y'))
+			tow = ele
+			frm = 'smart.home.ecp@gmail.com'
+			bdy = '\r\n'.join(('From: {}'.format(frm), 'To: {}'.format(tow), 'Subject: {}'.format(sub), '', msg))
+			mel = smtplib.SMTP(hst, 587)
+			mel.set_debuglevel(1)
+			mel.ehlo()
+			mel.starttls()
+			mel.login(frm, 'smarthome2017')
+			mel.sendmail(frm, [tow], bdy)
+			mel.quit
 
 # Class implementing the Foobot API
 

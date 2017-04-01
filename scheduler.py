@@ -30,6 +30,9 @@ schedule.every().day.at('23:20').do(RequestWeather().get_data)
 # Work on current day
 schedule.every().day.at('23:30').do(RequestQAI().get_data)
 
+# Send global status of the sensors
+schedule.every().friday.at('07:00').do(RequestEedomus().send_status_sensors)
+
 # Check missing dates and correct it
 schedule.every().monday.at('05:00').do(Corrector('').correct_wea)
 # Check missing dates and correct it
