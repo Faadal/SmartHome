@@ -31,9 +31,9 @@ schedule.every().day.at('23:20').do(RequestWeather().get_data)
 schedule.every().day.at('23:30').do(RequestQAI().get_data)
 
 # Check missing dates and correct it
-schedule.every().monday.at('05:00').do(Corrector('N227').correct_wea)
+schedule.every().monday.at('05:00').do(Corrector('').correct_wea)
 # Check missing dates and correct it
-schedule.every().monday.at('05:30').do(Corrector('N227').correct_qai)
+schedule.every().monday.at('05:30').do(Corrector('').correct_qai)
 # Check missing dates and correct it
 schedule.every().monday.at('12:00').do(Corrector('N227').correct_database)
 # Check missing dates and correct it
