@@ -9,6 +9,7 @@ import pandas as pd
 import tqdm
 import time
 
+from dateutil import parser
 from dateutil.rrule import rrule, DAILY
 
 from api import *
@@ -112,3 +113,35 @@ class Corrector:
 			for dte in tqdm.tqdm(ava) :
 				if dte not in dtf.index :
 					dbs.add_date_to_database(dte)
+
+	def correct_samples(self):
+
+		for ele in tqdm.tqdm(os.listdir('../Sample')) :
+
+			try :
+				dte = parser.parse(ele[4:14])
+				typ = ele.split('-')[3][:4].split('_')[0]
+				sen = ele.split('-')[3][:4].split('_')[1]
+
+				pwd = '../Data/Sensor_{}_{}'.format(typ, sen)
+
+				raw = open('../Sample/' + ele, 'r')
+				tim, stl = raw.readline()[1:-2].replace(' ', '').split(','), []
+				for ele in tim[:-1] :
+					tem = datetime.datetime(year=dte.year, month=dte.month, day=dte.day, hour=int(float(ele)), minute=int((float(ele)-int(float(ele)))*60))
+					stl.append(tem)
+				val = raw.readline()[1:-2].replace(' ', '').split(',')
+				val = [float(e) for e in val][:-1]
+				raw.close()
+
+				if not os.path.exists(pwd) :
+					pd.DataFrame(data=np.asarray(val), index=np.asarray(stl), columns=np.asarray(['Value'])).to_pickle(pwd)
+				else :
+					dtf = pd.read_pickle(pwd)
+					if not dte.date() in [ele.date() for ele in dtf.index] :
+						new = pd.DataFrame(data=np.asarray(val), index=np.asarray(stl), columns=np.asarray(['Value']))
+						dtf = pd.concat([dtf, new])
+						dtf.to_pickle(pwd)
+
+			except :
+				pass
