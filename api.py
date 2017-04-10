@@ -463,3 +463,9 @@ class RequestWeather:
 			dtf.to_pickle(pwd)
 
 		self.msg.log('{} successfully updated'.format(pwd))
+
+if __name__ == '__main__' :
+	api = RequestEedomus()
+	api.get_peripheriques()
+	raw = api.get_values('Temperature 01 Salle')
+	print(raw)
