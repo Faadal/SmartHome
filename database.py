@@ -68,10 +68,10 @@ class Parser:
 
 		try : 
 			raw = pd.read_pickle('../Weather/WEA')
-			srt = datetime.datetime(self.dte.year, self.dte.month, self.dte.day, 0, 0)
-			end = srt + datetime.timedelta(hours=23, minutes=59)
-			stl = raw[srt:end].index
-			val = raw[srt:end].values
+			srt = datetime.datetime(year=self.dte.year, month=self.dte.month, day=self.dte.day, hour=0, minute=0)
+			new = raw[srt:srt+datetime.timedelta(hours=23)]
+			stl = new.index
+			val = new.values
 
 			return stl, val
 		except :
@@ -337,9 +337,3 @@ class Database:
 		dte = datetime.date.today() - datetime.timedelta(days=1)
 
 		dbs = self.add_date_to_database(dte)
-
-if __name__ == '__main__':
-	dte = datetime.datetime(2017, 4, 1)
-	a, b = Parser(dte).parse_weather()
-	print(a)
-	print(b)

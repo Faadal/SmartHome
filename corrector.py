@@ -214,6 +214,5 @@ class Corrector:
 					self.msg.log('Database for sensor {} has been corrected'.format(sen))
 
 if __name__ == '__main__':
-	print(list(os.listdir('../Weather')))
-	#Corrector('').correct_wea()
-	Corrector('').correct_qai()
+	Corrector('N227').correct_database()
+	Corrector('E203').correct_database()
