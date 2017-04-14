@@ -106,6 +106,3 @@ class Sampler:
 		for gdr in ['T', 'H', 'L', 'M']:
 			for typ in [str(k) for k in range(1, 13)] + ['C', 'E'] :
 				self.get_sample(gdr + typ)
-
-if __name__ == '__main__':
-	Sampler().get_samples()
