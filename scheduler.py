@@ -18,9 +18,9 @@ schedule.every().day.at('08:00').do(RequestEedomus().get_data)
 # Work on previous day
 schedule.every().day.at('09:00').do(Sampler().get_samples)
 # Work on previous day
-schedule.every().day.at('09:30').do(Database('N227').update)
+#schedule.every().day.at('09:30').do(Database('N227').update)
 # Work on previous day
-schedule.every().day.at('09:40').do(Database('E203').update)
+#schedule.every().day.at('09:40').do(Database('E203').update)
 # Work on current day
 schedule.every().day.at('20:00').do(RequestEedomus().get_data)
 # Work on current day
@@ -34,13 +34,13 @@ schedule.every().day.at('23:30').do(RequestQAI().get_data)
 schedule.every().friday.at('07:00').do(RequestEedomus().send_status_sensors)
 
 # Check missing dates and correct it
-schedule.every().monday.at('05:00').do(Corrector('').correct_wea)
+#schedule.every().monday.at('05:00').do(Corrector('').correct_wea)
 # Check missing dates and correct it
-schedule.every().monday.at('05:30').do(Corrector('').correct_qai)
+#schedule.every().monday.at('05:30').do(Corrector('').correct_qai)
 # Check missing dates and correct it
-schedule.every().monday.at('12:00').do(Corrector('N227').correct_database)
+#schedule.every().monday.at('12:00').do(Corrector('N227').correct_database)
 # Check missing dates and correct it
-schedule.every().monday.at('12:10').do(Corrector('E203').correct_database)
+#schedule.every().monday.at('12:10').do(Corrector('E203').correct_database)
 
 # Launch
 
