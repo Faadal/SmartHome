@@ -178,7 +178,14 @@ class Database:
 
 		val = []
 		for fil in os.listdir('../Sample') :
-			val.append(parser.parse(fil[4:14], yearfirst=True, dayfirst=True).date())
+
+			try :
+				sen = fil.split('-')[3].split('.')[0].split('_')[1]
+			except :
+				pass
+
+			if sen in match_room(self.ort) :
+				val.append(parser.parse(fil[4:14], dayfirst=True).date())
 
 		return remove_doublon(val)
 
@@ -330,3 +337,9 @@ class Database:
 		dte = datetime.date.today() - datetime.timedelta(days=1)
 
 		dbs = self.add_date_to_database(dte)
+
+if __name__ == '__main__':
+	dte = datetime.datetime(2017, 4, 1)
+	a, b = Parser(dte).parse_weather()
+	print(a)
+	print(b)
