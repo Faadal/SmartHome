@@ -234,7 +234,7 @@ class RequestFoobot:
 			except :
 				self.err.log('Could not gather intel for Foobot {} on {}'.format(ind, datetime.date().today().srtftime('%d-%m-%Y')))
 
-			pwd = '../Data/Foobot_{}'.format(ind)
+			pwd = '../Sensors/Foobot_{}'.format(ind)
 
 			if not os.path.exists(pwd) :
 				pd.DataFrame(data=np.asarray(val), index=np.asarray(tim), columns=lab).to_pickle(pwd)
