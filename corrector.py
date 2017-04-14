@@ -123,7 +123,7 @@ class Corrector:
 				typ = ele.split('-')[3][:4].split('_')[0]
 				sen = ele.split('-')[3][:4].split('_')[1]
 
-				pwd = '../Data/Sensor_{}_{}'.format(typ, sen)
+				pwd = '../Sensors/Sensor_{}_{}'.format(typ, sen)
 
 				raw = open('../Sample/' + ele, 'r')
 				tim, stl = raw.readline()[1:-2].replace(' ', '').split(','), []
