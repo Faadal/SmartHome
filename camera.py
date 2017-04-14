@@ -8,10 +8,17 @@ from requests.auth import HTTPBasicAuth
 from PIL import Image
 from io import BytesIO
 
-if __name__ == '__main__':
+# Core class to save snapshots
 	
-	time.sleep(1)
-	url = 'http://138.195.146.167:8085/snapshot.cgi'
-	req = requests.get(url, auth=HTTPBasicAuth('admin', 'admin'))
-	img = Image.open(BytesIO(req.content))
-	img.save('./img5.png')
+def Snap:
+
+	def __init__(self) :
+		self.IPa = '138.195.146.167'
+		self.prt = '8085'
+		self.url = 'http://{}:{}/snapshot.cgi'.format(self.IPa, self.prt)
+
+	def save(self) :
+		time.sleep(1)	
+		req = requests.get(self.url, auth=HTTPBasicAuth('admin', 'admin'))
+		img = Image.open(BytesIO(req.content))
+		img.save('./img5.png')
