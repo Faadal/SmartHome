@@ -2,8 +2,10 @@
 
 # Imports
 
+import os
 import datetime
 import numpy as np
+import pandas as pd
 
 from dateutil import parser
 
@@ -83,6 +85,18 @@ class Sampler:
 				pwd.write(str(time_slot(sensor))+'\n')
 				pwd.write(str(ful)+'\n')
 				pwd.close()
+
+				bis = '../Sensors/Sensor_{}_{}'.format(sensor[:1], sensor[1:])
+				idx = [datetime.datetime(year=self.dte.year, month=self.dte.month, day=self.dte.day, hour=int(ele), minute=int((ele - int(ele)*60))) for ele in time_slot(sensor)]
+
+				if not os.path.exists(bis) :
+					pd.DataFrame(data=np.asarray(ful), index=np.asarray(idx), columns=np.asarray(['Value'])).to_pickle(bis)
+				else :
+					dtf = pd.read_pickle(bis)
+					new = pd.DataFrame(data=np.asarray(ful), index=np.asarray(idx), columns=np.asarray(['Value']))
+					dtf = pd.concat([dtf, new])
+					dtf.to_pickle(bis)
+
 				self.msg.log('Sample created for sensor {}'.format(sensor))
 			except :
 				self.err.log('Could not create the sample for sensor {}'.format(sensor))
@@ -92,3 +106,6 @@ class Sampler:
 		for gdr in ['T', 'H', 'L', 'M']:
 			for typ in [str(k) for k in range(1, 13)] + ['C', 'E'] :
 				self.get_sample(gdr + typ)
+
+if __name__ == '__main__':
+	Sampler().get_samples()
