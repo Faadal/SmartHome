@@ -1,10 +1,6 @@
 # @author : DINDIN Meryll
 
 # Imports
-
-import time
-import schedule
-
 from api import *
 from tools import *
 from database import *
@@ -31,7 +27,7 @@ schedule.every().day.at('23:20').do(RequestWeather().get_data)
 schedule.every().day.at('23:30').do(RequestQAI().get_data)
 
 # Send global status of the sensors
-schedule.every().friday.at('20:00').do(RequestEedomus().send_status_sensors)
+schedule.every().friday.at('21:00').do(RequestEedomus().send_status_sensors)
 
 # Check missing dates and correct it
 schedule.every().monday.at('05:00').do(Corrector('').correct_wea)
@@ -45,5 +41,5 @@ schedule.every().monday.at('12:10').do(Corrector('E203').correct_database)
 # Launch
 
 while True :
-	schedule.run_pending()
-	time.sleep(1)
+    schedule.run_pending()
+    time.sleep(1)

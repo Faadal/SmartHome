@@ -5,7 +5,6 @@
 import numpy as np
 
 # Aims at removing value occurencies
-
 def remove_doublon(raw):
 
 	new = []
@@ -16,17 +15,15 @@ def remove_doublon(raw):
 	return new
 
 # Define the mail adresses that wanna keep up with the sensors
-
 def list_emails() :
 
 	mel = []
-	mel.append('meryll.dindin@student.ecp.fr')
-	mel.append('smart.home.ecp@gmail.com')
+	mel.append('xxx')
+	mel.append('xxx')
 
 	return mel
 
 # Define the sensors corresponding to a given room
-
 def match_room(room):
 
 	# Has to evolve with the new configuration
@@ -38,7 +35,6 @@ def match_room(room):
 		return []
 
 # Define the time slicing depending of the considered sensor
-
 def time_slot(sensor):
 
 	if sensor[:1] in ['T', 'H', 'L'] :
@@ -47,7 +43,6 @@ def time_slot(sensor):
 		return [float(int(10*(0.0+k*0.01)))/10.0 for k in range(2400)]
 
 # Preprocessing to feed the filling holes algorithm
-
 def time_process(sensor, stl, values):
 
 	tab = np.zeros(len(time_slot(sensor)))
@@ -59,7 +54,6 @@ def time_process(sensor, stl, values):
 	return list(tab)
 
 # Aims at filling holes in time series through linear regression
-
 def remplissage(values) :
 
 	# Determine le premier indice non nul de la liste    
